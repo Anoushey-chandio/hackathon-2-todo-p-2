@@ -1,0 +1,17 @@
+project:
+  name: todo-auth-app
+  description: Simple Todo Web App with Authentication using FastAPI
+  stack:
+    backend: FastAPI
+    database: PostgreSQL (Neon)
+    auth: JWT (email & password)
+    frontend: HTML, CSS, JavaScript
+  principles:
+    - Clean architecture
+    - Readable and maintainable code
+    - Reusable components
+    - RESTful API design
+  constraints:
+    - Tasks page must be protected
+    - Login required before accessing tasks
+    - Fully responsive (mobile, tablet, desktop)

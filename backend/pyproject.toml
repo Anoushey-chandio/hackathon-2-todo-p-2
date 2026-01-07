@@ -1,0 +1,20 @@
+[project]
+name = "todo-backend"
+version = "0.1.0"
+description = "FastAPI Backend for Todo App"
+authors = [
+    {name = "Your Name", email = "you@example.com"},
+]
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "sqlalchemy",
+    "asyncpg",
+    "alembic",
+    "python-jose[cryptography]",
+    "passlib[bcrypt]",
+    "python-multipart",
+    "pydantic-settings",
+    "sqlmodel",
+]
+requires-python = ">=3.11"

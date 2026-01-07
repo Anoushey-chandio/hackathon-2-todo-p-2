@@ -1,0 +1,201 @@
+openapi: 3.0.0
+info:
+  title: Todo App API (Phase II)
+  version: 1.0.0
+  description: API for managing users and tasks with JWT authentication.
+
+components:
+  securitySchemes:
+    OAuth2PasswordBearer:
+      type: oauth2
+      flows:
+        password:
+          tokenUrl: /auth/token
+          scopes: {}
+
+security:
+  - OAuth2PasswordBearer: []
+
+paths:
+  /auth/signup:
+    post:
+      summary: Register a new user
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 8
+      responses:
+        201:
+          description: User created successfully
+        400:
+          description: Email already exists
+
+  /auth/token:
+    post:
+      summary: Login to get access token (OAuth2 Password Grant)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                username: # standard oauth2 field (email)
+                  type: string
+                password:
+                  type: string
+      responses:
+        200:
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  token_type:
+                    type: string
+
+  /api/tasks:
+    get:
+      summary: Get current user's tasks
+      responses:
+        200:
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+    post:
+      summary: Create a new task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCreate'
+      responses:
+        201:
+          description: Task created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+
+  /api/tasks/{id}:
+    get:
+      summary: Get a specific task
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Task details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        404:
+          description: Task not found
+    put:
+      summary: Update a task
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskUpdate'
+      responses:
+        200:
+          description: Task updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+    delete:
+      summary: Delete a task
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        204:
+          description: Task deleted
+
+  /api/tasks/{id}/complete:
+    patch:
+      summary: Toggle task completion
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Task completion status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+
+components:
+  schemas:
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        is_completed:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+    TaskCreate:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+    TaskUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        is_completed:
+          type: boolean

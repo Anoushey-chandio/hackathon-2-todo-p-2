@@ -1,55 +1,46 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report:
+- Version Change: v0.0.0 -> v1.0.0 (Initial Phase II Constitution)
+- Modified Principles:
+  - Added Principle 1: Modern Tech Stack & Architecture
+  - Added Principle 2: Secure Multi-User Access
+  - Added Principle 3: Thematic & Responsive Design
+  - Added Principle 4: Code Quality & Reusability
+  - Added Principle 5: Database Integrity & Configuration
+- Templates Checked:
+  - .specify/templates/plan-template.md (✅ Compatible)
+  - .specify/templates/spec-template.md (✅ Compatible)
+  - .specify/templates/tasks-template.md (✅ Compatible)
+-->
+# Phase II Full-Stack Todo Web App Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Modern Tech Stack & Architecture
+Implementation must strictly use Next.js 16+ (App Router, TypeScript, Tailwind) for the frontend and FastAPI with Neon PostgreSQL for the backend. No legacy HTML/CSS/JS patterns are permitted. RESTful API design is mandatory for all backend services.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### II. Secure Multi-User Access
+Security is paramount. Better Auth with JWT (JSON Web Tokens) must be used for authentication. Login/Signup is a hard gate before accessing any task management features. Data isolation per user is non-negotiable; users must only access their own data.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### III. Thematic & Responsive Design
+UI/UX must utilize the specified palette (White, Black, Light Purple, Light Cyan/Sky Blue) and cartoon-style illustrations matching the todo theme. The application must be fully responsive across mobile, tablet, and desktop devices.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### IV. Code Quality & Reusability
+Code must be clean, readable, and reusable. Follow Clean Architecture principles. Do not repeat code; create reusable components and utilities where appropriate. Adherence to Spec-Driven Development (SDD) is required.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### V. Database Integrity & Configuration
+Use the existing `DATABASE_URL` from `.env`. Do not introduce placeholders or hardcoded credentials. Database interactions must be robust, secure, and use standard migration practices.
 
-### [PRINCIPLE_6_NAME]
+## Technical Constraints
 
+Implementation is restricted to Phase II requirements only; do not include or reference Phase I code or UI artifacts unless explicitly migrated. Follow the Spec-Kit folder structure strictly. All features must be fully specified before implementation.
 
-[PRINCIPLE__DESCRIPTION]
+## Development Standards
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
-
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
-
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
-
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+All changes must be testable and verified. Adhere to the defined project structure: `specs/` for documentation, `src/` (or equivalent per Next.js/FastAPI conventions) for code. Commits must follow the project's commit message convention.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+Amendments to this constitution require a formal review and version increment. All Pull Requests must verify compliance with these principles. Complexity in implementation must be justified against these principles.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-01-06 | **Last Amended**: 2026-01-06
