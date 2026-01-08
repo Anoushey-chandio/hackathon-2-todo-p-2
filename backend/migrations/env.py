@@ -18,13 +18,12 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-from src.models.base import Base
-# Import all models here so they are registered
-# from src.models.user import User 
-# from src.models.task import Task
-# We will uncomment these later or ensure they are imported before running migrations
+from sqlmodel import SQLModel
+from src.models.user import User 
+from src.models.task import Task
+from src.models.auth import Session, Account, Verification
 
-target_metadata = Base.metadata
+target_metadata = SQLModel.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -65,19 +64,32 @@ def do_run_migrations(connection: Connection) -> None:
 
 
 async def run_migrations_online() -> None:
-    """Run migrations in 'online' mode.
+    """Run migrations in 'online' mode."""
+    from sqlalchemy.engine.url import make_url
+    
+    url_str = settings.DATABASE_URL
+    url = make_url(url_str)
+    
+    # Ensure driver is asyncpg for postgres
+    if url.drivername == "postgresql" or url.drivername == "postgresql+psycopg2":
+        url = url.set(drivername="postgresql+asyncpg")
+    
+    # Strip all query params for asyncpg as it doesn't support them via URL in this context
+    # and they cause TypeErrors in connect()
+    url = url.set(query={})
+    
+    connect_args = {}
+    if "neon.tech" in url_str:
+        connect_args["ssl"] = "require"
 
-    In this scenario we need to create an Engine
-    and associate a connection with the context.
-
-    """
     configuration = config.get_section(config.config_ini_section)
-    configuration["sqlalchemy.url"] = settings.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
+    configuration["sqlalchemy.url"] = str(url)
     
     connectable = async_engine_from_config(
         configuration,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
+        connect_args=connect_args,
     )
 
     async with connectable.connect() as connection:

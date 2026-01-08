@@ -1,14 +1,25 @@
-from sqlmodel import create_engine, Session, SQLModel
-from sqlmodel.ext.asyncio.session import AsyncSession, AsyncEngine
+from sqlmodel import SQLModel
+from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
 from .config import settings
+from sqlalchemy.engine.url import make_url
 
-# Neon requires sslmode=require usually, which is in the URL.
-# Asyncpg needs postgresql+asyncpg:// scheme.
-database_url = settings.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
+database_url = settings.DATABASE_URL
+if "postgresql://" in database_url or "postgresql+asyncpg://" in database_url:
+    url = make_url(database_url)
+    query = dict(url.query)
+    query.pop("sslmode", None)
+    query.pop("channel_binding", None)
+    
+    url = url.set(drivername="postgresql+asyncpg", query=query)
+    database_url = str(url)
 
 # Use create_async_engine from sqlalchemy.ext.asyncio directly
-async_engine = create_async_engine(database_url, echo=True)
+async_engine = create_async_engine(
+    database_url, 
+    echo=True,
+    connect_args={"ssl": True} if "neon.tech" in database_url else {}
+)
 
 # Async session factory
 async def get_db() -> AsyncSession:
