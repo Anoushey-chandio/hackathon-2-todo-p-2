@@ -13,7 +13,7 @@ class UserLogin(UserBase):
     password: str
 
 class UserOut(UserBase):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: str
     created_at: datetime
     
     class Config:

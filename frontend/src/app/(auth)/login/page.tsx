@@ -30,7 +30,14 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-6 bg-white dark:bg-black text-black dark:text-white font-sans">
-      <Image src="/assets/auth-illustration.svg" alt="Authentication" width={200} height={200} className="mb-8" />
+      <Image 
+        src="/assets/auth-illustration.svg" 
+        alt="Authentication" 
+        width={200} 
+        height={200} 
+        className="mb-8"
+        priority
+      />
       <h1 className="text-4xl font-bold mb-6 text-light-purple tracking-tight">Welcome Back</h1>
       {error && <p className="text-red-500 mb-4 bg-red-50 p-2 rounded border border-red-200">{error}</p>}
       <form onSubmit={handleSubmit} className="w-full max-w-sm flex flex-col gap-4">
@@ -50,7 +57,7 @@ export default function LoginPage() {
           className="p-3 border-2 rounded-xl border-gray-200 focus:border-light-purple outline-none transition-all dark:bg-gray-800 dark:border-gray-700"
           required
         />
-        <button type="submit" className="p-3 bg-light-purple text-white rounded-xl font-bold hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-purple-200">
+        <button type="submit" className="p-3 bg-white text-gray-700 border-2 border-gray-100 rounded-xl font-bold hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-gray-100">
           Sign In
         </button>
       </form>

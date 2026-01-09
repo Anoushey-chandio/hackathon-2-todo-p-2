@@ -66,28 +66,29 @@ def do_run_migrations(connection: Connection) -> None:
 async def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
     from sqlalchemy.engine.url import make_url
+    from sqlalchemy.ext.asyncio import create_async_engine
     
-    url_str = settings.DATABASE_URL
-    url = make_url(url_str)
+    # 1. Get URL from settings
+    database_url = settings.DATABASE_URL
     
-    # Ensure driver is asyncpg for postgres
-    if url.drivername == "postgresql" or url.drivername == "postgresql+psycopg2":
-        url = url.set(drivername="postgresql+asyncpg")
-    
-    # Strip all query params for asyncpg as it doesn't support them via URL in this context
-    # and they cause TypeErrors in connect()
-    url = url.set(query={})
-    
+    # 2. Process URL exactly like database.py
+    if "postgresql://" in database_url or "postgresql+asyncpg://" in database_url:
+        url = make_url(database_url)
+        query = dict(url.query)
+        query.pop("sslmode", None)
+        query.pop("channel_binding", None)
+        
+        url = url.set(drivername="postgresql+asyncpg", query=query)
+    else:
+        url = make_url(database_url)
+
     connect_args = {}
-    if "neon.tech" in url_str:
+    if "neon.tech" in str(url):
         connect_args["ssl"] = "require"
 
-    configuration = config.get_section(config.config_ini_section)
-    configuration["sqlalchemy.url"] = str(url)
-    
-    connectable = async_engine_from_config(
-        configuration,
-        prefix="sqlalchemy.",
+    # 3. Create engine directly (skipping async_engine_from_config for direct control)
+    connectable = create_async_engine(
+        url,
         poolclass=pool.NullPool,
         connect_args=connect_args,
     )

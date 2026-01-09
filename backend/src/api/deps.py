@@ -4,7 +4,7 @@ from sqlmodel import select
 from src.core.database import get_db, AsyncSession
 from src.models.user import User
 from src.models.auth import Session
-from datetime import datetime
+from datetime import datetime, timezone
 
 async def get_current_user(
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -26,13 +26,15 @@ async def get_current_user(
         raise credentials_exception
     
     # Check expiry
-    # if session.expiresAt < datetime.now(timezone.utc): # Naive/Aware handling needed
-    # BetterAuth dates are usually naive UTC or aware. SQLModel DateTime(timezone=True) is aware.
-    # Let's assume aware for now.
-    if session.expiresAt.replace(tzinfo=None) < datetime.utcnow(): 
-        # Compare naive UTC if stored as such or adjust.
-        # Postgres stores UTC. SQLite stores text.
-        # Let's just check against datetime.now()
+    # BetterAuth dates are usually stored as aware UTC.
+    now = datetime.now(timezone.utc)
+    
+    # Ensure session.expiresAt is aware for comparison
+    expires_at = session.expiresAt
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+
+    if expires_at < now:
         raise credentials_exception
 
     # Get User

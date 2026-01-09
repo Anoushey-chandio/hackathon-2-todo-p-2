@@ -16,8 +16,8 @@ class TaskUpdate(SQLModel):
     is_completed: Optional[bool] = Field(default=None)
 
 class TaskOut(TaskBase):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int
+    id: int
+    user_id: str
     created_at: datetime
     updated_at: datetime
     

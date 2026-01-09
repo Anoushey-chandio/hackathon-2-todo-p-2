@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field
 from typing import List
 from pathlib import Path
 
@@ -11,7 +12,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str = Field(alias="BETTER_AUTH_SECRET")
     
     model_config = SettingsConfigDict(
-        env_file=str(BASE_DIR / ".env"),
+        env_file=str(BASE_DIR / "backend" / ".env"),
         env_file_encoding='utf-8',
         extra='ignore'
     )

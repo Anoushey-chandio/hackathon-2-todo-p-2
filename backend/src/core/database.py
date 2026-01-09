@@ -3,8 +3,11 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
 from .config import settings
 from sqlalchemy.engine.url import make_url
+# Import models to register them with SQLModel.metadata
+from src.models import User, Task, Session, Account, Verification
 
 database_url = settings.DATABASE_URL
+# Ensure async driver
 if "postgresql://" in database_url or "postgresql+asyncpg://" in database_url:
     url = make_url(database_url)
     query = dict(url.query)
@@ -12,13 +15,19 @@ if "postgresql://" in database_url or "postgresql+asyncpg://" in database_url:
     query.pop("channel_binding", None)
     
     url = url.set(drivername="postgresql+asyncpg", query=query)
-    database_url = str(url)
+else:
+    url = make_url(database_url)
+
+connect_args = {}
+# Check original string or url.host for neon
+if "neon.tech" in str(url):
+    connect_args["ssl"] = "require"
 
 # Use create_async_engine from sqlalchemy.ext.asyncio directly
 async_engine = create_async_engine(
-    database_url, 
+    url, 
     echo=True,
-    connect_args={"ssl": True} if "neon.tech" in database_url else {}
+    connect_args=connect_args
 )
 
 # Async session factory
