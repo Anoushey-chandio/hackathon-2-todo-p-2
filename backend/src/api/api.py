@@ -1,6 +1,5 @@
 from fastapi import APIRouter
-from .endpoints import auth, tasks
+from .endpoints import tasks
 
 api_router = APIRouter()
-api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(tasks.router, prefix="/api/tasks", tags=["tasks"])

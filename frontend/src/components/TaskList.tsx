@@ -30,7 +30,7 @@ export default function TaskList({ tasks, onTaskUpdated }: TaskListProps) {
   };
 
   if (tasks.length === 0) {
-    return <p className="text-center text-gray-500 mt-8">No tasks yet. Add one above!</p>;
+    return null; // Handled by parent
   }
 
   return (
@@ -38,32 +38,46 @@ export default function TaskList({ tasks, onTaskUpdated }: TaskListProps) {
       {tasks.map((task) => (
         <div 
           key={task.id} 
-          className={`p-4 rounded shadow-sm border flex justify-between items-center transition-all ${
+          className={`group p-5 rounded-2xl border transition-all duration-200 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center ${
             task.is_completed 
-              ? 'bg-gray-100 dark:bg-gray-900 border-gray-200 dark:border-gray-800 opacity-75' 
-              : 'bg-white dark:bg-gray-800 border-light-cyan'
+              ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800 opacity-75' 
+              : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 hover:border-light-purple/30 hover:shadow-md'
           }`}
         >
-          <div>
-            <h3 className={`font-semibold text-lg ${task.is_completed ? 'line-through text-gray-500' : ''}`}>
+          <div className="flex-1">
+            <h3 className={`font-bold text-lg mb-1 transition-colors ${
+              task.is_completed 
+                ? 'line-through text-gray-400 dark:text-gray-500' 
+                : 'text-gray-800 dark:text-gray-100'
+            }`}>
               {task.title}
             </h3>
-            {task.description && <p className="text-sm text-gray-600 dark:text-gray-400">{task.description}</p>}
+            {task.description && (
+              <p className={`text-sm ${
+                task.is_completed 
+                  ? 'text-gray-400 dark:text-gray-600' 
+                  : 'text-gray-500 dark:text-gray-400'
+              }`}>
+                {task.description}
+              </p>
+            )}
           </div>
-          <div className="flex gap-2">
+          
+          <div className="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
             <button
               onClick={() => handleToggle(task.id)}
-              className={`px-3 py-1 text-sm rounded ${
+              className={`flex-1 sm:flex-none px-4 py-2 text-sm font-bold rounded-xl transition-all ${
                 task.is_completed 
-                  ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' 
-                  : 'bg-green-100 text-green-700 hover:bg-green-200'
+                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600' 
+                  : 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/40 border border-green-100 dark:border-green-800'
               }`}
             >
-              {task.is_completed ? 'Undo' : 'Done'}
+              {task.is_completed ? 'Undo' : 'Complete'}
             </button>
             <button
               onClick={() => handleDelete(task.id)}
-              className="px-3 py-1 text-sm rounded bg-red-100 text-red-700 hover:bg-red-200"
+              className="flex-1 sm:flex-none px-4 py-2 text-sm font-bold rounded-xl bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 border border-red-100 dark:border-red-800 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+              title="Delete Task"
             >
               Delete
             </button>

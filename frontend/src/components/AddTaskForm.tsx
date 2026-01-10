@@ -31,31 +31,34 @@ export default function AddTaskForm({ onTaskAdded }: AddTaskFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mb-6 p-4 bg-white dark:bg-gray-800 rounded shadow-md border border-gray-200 dark:border-gray-700">
-      <h2 className="text-xl font-semibold mb-4 text-light-purple">Add New Task</h2>
-      <div className="flex flex-col gap-3">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2">
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
         <input
           type="text"
-          placeholder="Task Title"
+          placeholder="What needs to be done?"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="p-2 border rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700"
+          className="p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-light-purple/50 transition-all"
           required
         />
+      </div>
+      <div className="flex flex-col gap-2">
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
         <textarea
-          placeholder="Description (optional)"
+          placeholder="Add some details..."
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="p-2 border rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700"
+          className="p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-light-purple/50 transition-all min-h-[100px] resize-none"
         />
-        <button 
-          type="submit" 
-          disabled={loading}
-          className="p-2 bg-light-purple text-white rounded hover:bg-opacity-90 disabled:opacity-50"
-        >
-          {loading ? 'Adding...' : 'Add Task'}
-        </button>
       </div>
+      <button 
+        type="submit" 
+        disabled={loading}
+        className="mt-2 w-full py-3 bg-light-purple text-white font-bold rounded-xl hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-100 dark:shadow-none"
+      >
+        {loading ? 'Creating...' : 'Create Task'}
+      </button>
     </form>
   );
 }
