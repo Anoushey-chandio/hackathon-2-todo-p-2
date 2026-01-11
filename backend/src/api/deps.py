@@ -5,6 +5,9 @@ from src.core.database import get_db, AsyncSession
 from src.models.user import User
 from src.models.auth import Session
 from datetime import datetime, timezone
+import logging
+
+logger = logging.getLogger(__name__)
 
 async def get_current_user(
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -14,8 +17,9 @@ async def get_current_user(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
     )
-    
+
     if not session_token:
+        logger.warning("get_current_user: No session token found in cookies")
         raise credentials_exception
 
     # Validate session
@@ -23,25 +27,28 @@ async def get_current_user(
     session = result.scalars().first()
 
     if not session:
+        logger.warning(f"get_current_user: Session token not found in DB: {session_token[:10]}...")
         raise credentials_exception
-    
+
     # Check expiry
     # BetterAuth dates are usually stored as aware UTC.
     now = datetime.now(timezone.utc)
-    
+
     # Ensure session.expiresAt is aware for comparison
     expires_at = session.expiresAt
     if expires_at.tzinfo is None:
         expires_at = expires_at.replace(tzinfo=timezone.utc)
 
     if expires_at < now:
+        logger.warning("get_current_user: Session expired")
         raise credentials_exception
 
     # Get User
     result = await db.execute(select(User).where(User.id == session.userId))
     user = result.scalars().first()
-    
+
     if user is None:
+        logger.warning("get_current_user: User not found for session")
         raise credentials_exception
-        
+
     return user
