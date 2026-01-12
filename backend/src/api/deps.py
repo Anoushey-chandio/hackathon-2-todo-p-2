@@ -1,54 +1,48 @@
 from typing import Annotated, Optional
-from fastapi import Depends, HTTPException, status, Cookie
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
 from sqlmodel import select
 from src.core.database import get_db, AsyncSession
 from src.models.user import User
-from src.models.auth import Session
-from datetime import datetime, timezone
+from src.core.security import decode_access_token
 import logging
 
 logger = logging.getLogger(__name__)
 
+# Placeholder tokenUrl, as auth is handled by Next.js
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
+
 async def get_current_user(
     db: Annotated[AsyncSession, Depends(get_db)],
-    session_token: Annotated[Optional[str], Cookie(alias="better-auth.session_token")] = None,
+    token: Annotated[str, Depends(oauth2_scheme)],
 ):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
     )
 
-    if not session_token:
-        logger.warning("get_current_user: No session token found in cookies")
+    payload = decode_access_token(token)
+    if payload is None:
+        logger.warning("get_current_user: Invalid JWT token")
         raise credentials_exception
-
-    # Validate session
-    result = await db.execute(select(Session).where(Session.token == session_token))
-    session = result.scalars().first()
-
-    if not session:
-        logger.warning(f"get_current_user: Session token not found in DB: {session_token[:10]}...")
-        raise credentials_exception
-
-    # Check expiry
-    # BetterAuth dates are usually stored as aware UTC.
-    now = datetime.now(timezone.utc)
-
-    # Ensure session.expiresAt is aware for comparison
-    expires_at = session.expiresAt
-    if expires_at.tzinfo is None:
-        expires_at = expires_at.replace(tzinfo=timezone.utc)
-
-    if expires_at < now:
-        logger.warning("get_current_user: Session expired")
+    
+    # Better Auth JWT usually puts user id in 'sub'
+    user_id: str = payload.get("sub")
+    if user_id is None:
+        # Fallback to 'id' if sub is missing
+        user_id = payload.get("id")
+    
+    if user_id is None:
+        logger.warning(f"get_current_user: No user ID in token payload: {payload}")
         raise credentials_exception
 
     # Get User
-    result = await db.execute(select(User).where(User.id == session.userId))
+    result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalars().first()
 
     if user is None:
-        logger.warning("get_current_user: User not found for session")
+        logger.warning(f"get_current_user: User not found for ID: {user_id}")
         raise credentials_exception
 
     return user

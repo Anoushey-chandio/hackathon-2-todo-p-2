@@ -14,6 +14,7 @@ load_dotenv(dotenv_path=BASE_DIR / "backend" / ".env", override=True)
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from src.api.api import api_router
+from src.api.errors import APIError
 from fastapi.middleware.cors import CORSMiddleware
 from src.core.database import init_db
 from src.core.config import settings
@@ -30,6 +31,19 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.exception_handler(APIError)
+async def api_error_handler(request: Request, exc: APIError):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "error": {
+                "code": exc.code,
+                "message": exc.message,
+                "details": exc.details,
+            }
+        },
+    )
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):

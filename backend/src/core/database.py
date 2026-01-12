@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from .config import settings
 from sqlalchemy.engine.url import make_url
 # Import models to register them with SQLModel.metadata
-from src.models import User, Task, Session, Account, Verification
+from src.models import User, Task, Session, Account, Verification, Jwks
 
 database_url = settings.DATABASE_URL
 # Ensure async driver
