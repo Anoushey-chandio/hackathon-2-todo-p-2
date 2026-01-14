@@ -24,12 +24,25 @@ export async function fetchClient(path: string, options: RequestInit = {}) {
   // Add headers to satisfy strict CORS/Proxy requirements
   headers.set('X-Requested-With', 'XMLHttpRequest');
 
+  // Add Authorization Bearer Token if session exists
+  // We explicitly fetch the session to get the token.
+  // Better Auth caches this effectively.
+  try {
+      const session = await authClient.getSession();
+      const token = session.data?.session?.token;
+      if (token) {
+          headers.set('Authorization', `Bearer ${token}`);
+      }
+  } catch {
+      // Ignore session fetch errors, proceed without token (might be public endpoint or will fail 401)
+  }
+
   // Note: Setting Origin manually in browser `fetch` is often ignored by browsers for security,
   // but we add it here to satisfy the requirement if running in a context that allows it.
   if (!headers.has('Origin')) {
      try {
        headers.set('Origin', typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
-     } catch (e) {
+     } catch {
        // Ignore if browser blocks setting Origin
      }
   }
@@ -37,7 +50,8 @@ export async function fetchClient(path: string, options: RequestInit = {}) {
   const fetchOptions: RequestInit = {
     ...options,
     headers,
-    credentials: 'include', // CRITICAL: Send cookies for session auth
+    // We still send credentials just in case, but Bearer is primary for Python backend now
+    credentials: 'include', 
   };
 
   try {
@@ -46,14 +60,13 @@ export async function fetchClient(path: string, options: RequestInit = {}) {
     // Only handle 401 if it's not an auth-related request
     if (response.status === 401 && !path.includes('/auth/')) {
       if (typeof window !== 'undefined') {
+        // Double check session before redirecting
         const session = await authClient.getSession();
         if (!session.data) {
           // Only redirect if we definitely don't have a session
           window.location.href = '/login';
         }
-        // If we DO have a session but get 401, we do NOT redirect.
-        // This likely means the backend cookie check failed or permissions issue.
-        // We let the caller handle the failure (e.g. show error message).
+        // If we DO have a session but get 401, it might be a token mismatch or expiry.
       }
     }
 

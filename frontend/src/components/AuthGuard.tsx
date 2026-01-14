@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 
@@ -12,7 +12,6 @@ export default function AuthGuard({
   const router = useRouter();
   const pathname = usePathname();
   const { data: session, isPending, error } = authClient.useSession();
-  const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
     if (isPending) return;
@@ -27,17 +26,12 @@ export default function AuthGuard({
       if (isAuthRoute) {
         // If logged in and trying to access login/signup, redirect to dashboard
         router.push('/');
-      } else {
-        setAuthorized(true);
       }
     } else {
       // Treat error (e.g. connection failed) as not logged in
       if (isProtectedRoute) {
         // If not logged in and trying to access protected route, redirect to login
         router.push('/login');
-      } else {
-        // Allow access to public routes (if any) or auth routes
-        setAuthorized(true);
       }
     }
   }, [pathname, router, session, isPending, error]);

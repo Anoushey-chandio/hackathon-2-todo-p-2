@@ -6,13 +6,11 @@ import AddTaskForm from '@/components/AddTaskForm';
 import TaskList from '@/components/TaskList';
 import Image from 'next/image';
 import { authClient } from '@/lib/auth-client';
-import { useRouter } from 'next/navigation';
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const { data: session, isPending } = authClient.useSession();
-  const router = useRouter();
 
   const fetchTasks = async () => {
     // Session is guaranteed by AuthGuard for this route
@@ -69,7 +67,7 @@ export default function TasksPage() {
                         className="mb-6 opacity-80 w-auto h-auto"
                         priority 
                       />
-                      <h3 className="text-xl font-bold mb-2">You're all caught up!</h3>
+                      <h3 className="text-xl font-bold mb-2">You&apos;re all caught up!</h3>
                       <p className="text-gray-500">Create a task to get started with your day.</p>
                   </div>
                 ) : (

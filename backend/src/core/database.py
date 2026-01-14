@@ -27,7 +27,11 @@ if "neon.tech" in str(url):
 async_engine = create_async_engine(
     url, 
     echo=True,
-    connect_args=connect_args
+    connect_args=connect_args,
+    pool_pre_ping=True,
+    pool_size=10,
+    max_overflow=20,
+    pool_recycle=300
 )
 
 # Async session factory

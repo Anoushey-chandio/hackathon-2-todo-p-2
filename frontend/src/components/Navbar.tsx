@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { authClient } from '@/lib/auth-client';
-import Image from 'next/image';
 
 export default function Navbar() {
   const { data: session } = authClient.useSession();

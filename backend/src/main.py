@@ -1,7 +1,14 @@
-from dotenv import load_dotenv
-import os
-from pathlib import Path
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from src.api.api import api_router
+from src.api.errors import APIError
+from fastapi.middleware.cors import CORSMiddleware
+from src.core.database import init_db, async_engine
+from src.core.config import settings
+from contextlib import asynccontextmanager
 import logging
+from pathlib import Path
+from dotenv import load_dotenv
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -11,17 +18,19 @@ logger = logging.getLogger(__name__)
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 load_dotenv(dotenv_path=BASE_DIR / "backend" / ".env", override=True)
 
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
-from src.api.api import api_router
-from src.api.errors import APIError
-from fastapi.middleware.cors import CORSMiddleware
-from src.core.database import init_db
-from src.core.config import settings
-
 logger.info(f"DEBUG main.py: settings.DATABASE_URL={settings.DATABASE_URL}")
 
-app = FastAPI(title="Todo App API")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("Initializing database...")
+    await init_db()
+    logger.info("Database initialized.")
+    yield
+    logger.info("Closing database connection...")
+    await async_engine.dispose()
+    logger.info("Database connection closed.")
+
+app = FastAPI(title="Todo App API", lifespan=lifespan)
 
 # Configure CORS
 app.add_middleware(
@@ -54,12 +63,6 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 app.include_router(api_router)
-
-@app.on_event("startup")
-async def on_startup():
-    logger.info("Initializing database...")
-    await init_db()
-    logger.info("Database initialized.")
 
 @app.get("/")
 async def root():

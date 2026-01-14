@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { authClient } from '@/lib/auth-client';
 
 export default function WelcomePage() {
@@ -43,23 +42,6 @@ export default function WelcomePage() {
                 </Link>
             </>
           )}
-        </div>
-      </div>
-
-      {/* Illustration */}
-      <div className="relative w-full max-w-4xl mx-auto hidden md:block">
-        <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
-        <div className="absolute top-0 -right-4 w-72 h-72 bg-cyan-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
-        <div className="relative">
-            <Image 
-            src="/assets/tasks-illustration.svg" 
-            alt="App Preview" 
-            width={600} 
-            height={400}
-            className="mx-auto drop-shadow-2xl hover:scale-105 transition-transform duration-500 w-auto h-auto"
-            priority
-            />
         </div>
       </div>
     </div>

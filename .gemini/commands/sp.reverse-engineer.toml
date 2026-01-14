@@ -1085,38 +1085,7 @@ This document captures the reusable intelligence embedded in the codebase—patt
 - **Provide request IDs**: Enable correlation between client errors and server logs
 
 **Implementation Pattern** (observed in codebase):
-```python
-# Extracted from: [file: src/api/errors.py, lines 15-45]
-class APIError(Exception):
-    """Base exception for all API errors"""
-
-    def __init__(self, code: str, message: str, status: int = 400, details: dict = None):
-        self.code = code
-        self.message = message
-        self.status = status
-        self.details = details or {}
-
-    def to_response(self):
-        """Convert to JSON response format"""
-        return {
-            "error": {
-                "code": self.code,
-                "message": self.message,
-                "details": self.details,
-                "request_id": get_request_id(),
-                "timestamp": datetime.utcnow().isoformat()
-            }
-        }, self.status
-
-# Usage pattern:
-if not user:
-    raise APIError(
-        code="USER_NOT_FOUND",
-        message="User with specified ID does not exist",
-        status=404,
-        details={"user_id": user_id}
-    )
-```
+(Code example removed for TOML safety)
 
 **When to apply**:
 - All API endpoints
@@ -1147,41 +1116,7 @@ if not user:
 - **Graceful degradation**: Circuit breaker pattern when database unavailable
 
 **Implementation Pattern** (observed in codebase):
-```python
-# Extracted from: [file: src/db/connection.py, lines 20-55]
-from sqlalchemy import create_engine, pool
-
-# Connection pool configuration
-engine = create_engine(
-    DATABASE_URL,
-    poolclass=pool.QueuePool,
-    pool_size=10,              # Max connections in pool
-    max_overflow=20,           # Additional connections beyond pool_size
-    pool_timeout=30,           # Seconds to wait for connection
-    pool_recycle=3600,         # Recycle connections after 1 hour
-    pool_pre_ping=True,        # Test connection before using
-    echo=False                 # Don't log SQL (production)
-)
-
-# Context manager for connection lifecycle
-@contextmanager
-def get_db_session():
-    """Provide transactional scope around operations"""
-    session = Session(bind=engine)
-    try:
-        yield session
-        session.commit()
-    except Exception:
-        session.rollback()
-        raise
-    finally:
-        session.close()
-
-# Usage pattern:
-with get_db_session() as session:
-    user = session.query(User).filter_by(id=user_id).first()
-    # Connection automatically returned to pool on context exit
-```
+(Code example removed for TOML safety)
 
 **When to apply**:
 - All database-backed applications
@@ -1212,51 +1147,7 @@ with get_db_session() as session:
 - **Schema-based validation**: Use JSON Schema, Pydantic, Joi for declarative validation
 
 **Implementation Pattern** (observed in codebase):
-```python
-# Extracted from: [file: src/api/validators.py, lines 10-60]
-from pydantic import BaseModel, EmailStr, validator
-
-class CreateUserRequest(BaseModel):
-    """Validation schema for user creation"""
-    email: EmailStr                    # Email format validation
-    username: str
-    password: str
-    age: int
-
-    @validator('username')
-    def username_alphanumeric(cls, v):
-        """Username must be alphanumeric"""
-        if not v.isalnum():
-            raise ValueError('Username must contain only letters and numbers')
-        if len(v) < 3 or len(v) > 20:
-            raise ValueError('Username must be 3-20 characters')
-        return v
-
-    @validator('password')
-    def password_strength(cls, v):
-        """Password must meet strength requirements"""
-        if len(v) < 8:
-            raise ValueError('Password must be at least 8 characters')
-        if not any(c.isupper() for c in v):
-            raise ValueError('Password must contain uppercase letter')
-        if not any(c.isdigit() for c in v):
-            raise ValueError('Password must contain digit')
-        return v
-
-    @validator('age')
-    def age_range(cls, v):
-        """Age must be reasonable"""
-        if v < 13 or v > 120:
-            raise ValueError('Age must be between 13 and 120')
-        return v
-
-# Usage in API endpoint:
-@app.post("/users")
-def create_user(request: CreateUserRequest):  # Automatic validation
-    # If we reach here, all validation passed
-    user = UserService.create(request.dict())
-    return user.to_dict()
-```
+(Code example removed for TOML safety)
 
 **When to apply**:
 - All API endpoints
@@ -1379,30 +1270,7 @@ The system needs:
 **Observed in**: All data layer modules
 
 **Structure**:
-```python
-class UserRepository:
-    """Abstract data access for User entity"""
-
-    def find_by_id(self, user_id: int) -> Optional[User]:
-        """Find user by ID"""
-        pass
-
-    def find_by_email(self, email: str) -> Optional[User]:
-        """Find user by email"""
-        pass
-
-    def create(self, user_data: dict) -> User:
-        """Create new user"""
-        pass
-
-    def update(self, user_id: int, updates: dict) -> User:
-        """Update existing user"""
-        pass
-
-    def delete(self, user_id: int) -> bool:
-        """Soft-delete user"""
-        pass
-```
+(Code example removed for TOML safety)
 
 **Benefits**:
 - Decouples business logic from data access
@@ -1418,30 +1286,7 @@ class UserRepository:
 **Observed in**: All business logic modules
 
 **Structure**:
-```python
-class OrderService:
-    """Business logic for order processing"""
-
-    def __init__(self, order_repo, inventory_service, payment_service):
-        self.order_repo = order_repo
-        self.inventory_service = inventory_service
-        self.payment_service = payment_service
-
-    def create_order(self, user_id: int, items: List[OrderItem]) -> Order:
-        """
-        Create order with inventory validation and payment processing
-
-        Steps:
-        1. Validate inventory availability
-        2. Calculate totals
-        3. Process payment
-        4. Create order record
-        5. Update inventory
-        6. Send confirmation
-        """
-        # Orchestration logic here
-        pass
-```
+(Code example removed for TOML safety)
 
 **Benefits**:
 - Encapsulates business rules

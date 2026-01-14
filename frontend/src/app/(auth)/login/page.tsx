@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { authClient } from '@/lib/auth-client';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -61,9 +62,7 @@ export default function LoginPage() {
           Sign In
         </button>
       </form>
-      <p className="mt-6 text-gray-600 dark:text-gray-400">
-        Don't have an account? <a href="/signup" className="text-light-purple font-bold hover:underline">Sign up</a>
-      </p>
+            <p className="text-gray-500 dark:text-gray-400">Don&apos;t have an account? <Link href="/signup" className="text-light-purple font-semibold hover:underline">Sign up</Link></p>
     </div>
   );
 }
