@@ -56,7 +56,7 @@ export default function Navbar() {
                   href="/signup"
                   className="px-4 py-2 bg-light-purple text-white text-sm font-bold rounded-lg hover:opacity-90 transition-opacity shadow-lg shadow-purple-100 dark:shadow-none"
                 >
-                  Sign Up
+                  Sign up
                 </Link>
               </div>
             )}
