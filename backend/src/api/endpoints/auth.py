@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlmodel import select
 from src.core.database import get_db, AsyncSession
 from src.models.user import User
@@ -7,15 +7,19 @@ from src.models.auth import Account, Session
 from src.models.jwks import Jwks
 from src.schemas.user import UserCreate, UserLogin
 from src.core.security import get_password_hash, verify_password, create_access_token
-from src.api.deps import get_current_user
+from src.api.deps import get_current_user, get_token
 import uuid
 from datetime import datetime, timezone, timedelta
 
 router = APIRouter()
 
-@router.post("/sign-up")
+COOKIE_NAME = "better-auth.session_token"
+SESSION_DAYS = 7
+
+@router.post("/sign-up/email")
 async def sign_up(
     user_in: UserCreate,
+    response: Response,
     db: Annotated[AsyncSession, Depends(get_db)]
 ):
     # Check if user exists
@@ -31,10 +35,12 @@ async def sign_up(
     
     # Create User
     user_id = str(uuid.uuid4())
+    user_name = user_in.name if user_in.name else user_in.email.split("@")[0]
     user = User(
         id=user_id,
         email=user_in.email,
-        name=user_in.email.split("@")[0], # Default name
+        name=user_name,
+        image=user_in.image,
         emailVerified=False,
         createdAt=now,
         updatedAt=now
@@ -57,12 +63,12 @@ async def sign_up(
     
     # Create Session
     session_id = str(uuid.uuid4())
-    access_token = create_access_token(data={"sub": user.id})
+    access_token = create_access_token(data={"sub": user.id}, expires_delta=timedelta(days=SESSION_DAYS))
     session = Session(
         id=session_id,
         userId=user_id,
         token=access_token,
-        expiresAt=now + timedelta(days=7),
+        expiresAt=now + timedelta(days=SESSION_DAYS),
         createdAt=now,
         updatedAt=now
     )
@@ -72,6 +78,16 @@ async def sign_up(
     await db.refresh(user)
     await db.refresh(session)
 
+    # Set Cookie
+    response.set_cookie(
+        key=COOKIE_NAME,
+        value=access_token,
+        httponly=True,
+        secure=False, # Set to True in production with HTTPS
+        samesite="lax",
+        max_age=60 * 60 * 24 * SESSION_DAYS
+    )
+
     return {
         "user": user,
         "session": session
@@ -80,6 +96,7 @@ async def sign_up(
 @router.post("/sign-in/email")
 async def sign_in_email(
     user_in: UserLogin,
+    response: Response,
     db: Annotated[AsyncSession, Depends(get_db)]
 ):
     # Find User
@@ -99,18 +116,28 @@ async def sign_in_email(
     # Create Session
     now = datetime.now(timezone.utc)
     session_id = str(uuid.uuid4())
-    access_token = create_access_token(data={"sub": user.id})
+    access_token = create_access_token(data={"sub": user.id}, expires_delta=timedelta(days=SESSION_DAYS))
     session = Session(
         id=session_id,
         userId=user.id,
         token=access_token,
-        expiresAt=now + timedelta(days=7),
+        expiresAt=now + timedelta(days=SESSION_DAYS),
         createdAt=now,
         updatedAt=now
     )
     db.add(session)
     await db.commit()
     await db.refresh(session)
+
+    # Set Cookie
+    response.set_cookie(
+        key=COOKIE_NAME,
+        value=access_token,
+        httponly=True,
+        secure=False,
+        samesite="lax",
+        max_age=60 * 60 * 24 * SESSION_DAYS
+    )
 
     return {
         "user": user,
@@ -120,22 +147,15 @@ async def sign_in_email(
 @router.get("/get-session")
 async def get_session(
     current_user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[AsyncSession, Depends(get_db)]
+    db: Annotated[AsyncSession, Depends(get_db)],
+    token: str = Depends(get_token)
 ):
-    # Since we are using Bearer token, the current_user is already resolved.
-    # We just need to return the session info.
-    # Ideally we should look up the session by the token, but get_current_user consumes the token.
-    # For now, we will return the latest valid session for the user as a fallback,
-    # or just mock the session object if we can't easily get the exact one without changing deps.
-    
-    # Better approach: Find the session that corresponds to the user's active login.
-    # But since we generate a NEW session on every login, there might be multiple.
-    # We will fetch the most recently created session for this user.
-    
+    # Find the session matching the current token
+    # Note: get_current_user already validated the token is valid JWT and user exists.
+    # But we want to return the Session object associated with it.
     result = await db.execute(
         select(Session)
-        .where(Session.userId == current_user.id)
-        .order_by(Session.createdAt.desc())
+        .where(Session.token == token)
     )
     session = result.scalars().first()
     
@@ -147,6 +167,25 @@ async def get_session(
         "session": session
     }
 
+@router.post("/sign-out")
+async def sign_out(
+    response: Response,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    token: str = Depends(get_token)
+):
+    # Find session and delete it
+    result = await db.execute(select(Session).where(Session.token == token))
+    session = result.scalars().first()
+    
+    if session:
+        await db.delete(session)
+        await db.commit()
+    
+    # Clear cookie
+    response.delete_cookie(COOKIE_NAME)
+    
+    return {"success": True}
+
 @router.get("/.well-known/jwks.json")
 async def get_jwks(db: Annotated[AsyncSession, Depends(get_db)]):
     # Fetch keys from DB
@@ -156,11 +195,6 @@ async def get_jwks(db: Annotated[AsyncSession, Depends(get_db)]):
     # Format as JWKS
     jwks_keys = []
     for key in keys:
-        # Assuming publicKey is stored as JSON string or PEM that needs parsing
-        # For now, just returning what's in the DB if it matches JWK format
-        # If it's a PEM, we'd need to convert it.
-        # But given the error "updatedAt NULL", the keys are likely being inserted by a library.
-        # We will just expose them.
         import json
         try:
             key_data = json.loads(key.publicKey)

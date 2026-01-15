@@ -8,6 +8,8 @@ class UserBase(SQLModel):
 
 class UserCreate(UserBase):
     password: str
+    name: Optional[str] = None
+    image: Optional[str] = None
 
 class UserLogin(UserBase):
     password: str
