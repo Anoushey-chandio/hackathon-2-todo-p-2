@@ -1,21 +1,21 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getTasks, Task } from '@/lib/api_tasks';
+import { taskApi, Task } from '@/lib/api_tasks';
 import AddTaskForm from '@/components/AddTaskForm';
 import TaskList from '@/components/TaskList';
 import Image from 'next/image';
-import { authClient } from '@/lib/auth-client';
+import { useSession } from '@/lib/auth-client';
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const { data: session, isPending } = authClient.useSession();
+  const { user, token, isLoading } = useSession();
 
   const fetchTasks = async () => {
     // Session is guaranteed by AuthGuard for this route
     try {
-      const data = await getTasks();
+      const data = await taskApi.getAll();
       setTasks(data);
     } catch (error) {
       console.error(error);
@@ -26,10 +26,10 @@ export default function TasksPage() {
 
   useEffect(() => {
     // Only fetch if session is confirmed (though AuthGuard blocks render if not)
-    if (!isPending && session) {
+    if (!isLoading && user && token) {
         fetchTasks();
     }
-  }, [session, isPending]);
+  }, [user, token, isLoading]);
 
   // Loading state handled by AuthGuard or initial state
 

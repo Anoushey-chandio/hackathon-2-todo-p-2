@@ -7,7 +7,7 @@ from src.models.task import Task
 from src.schemas.task import TaskCreate, TaskUpdate, TaskOut
 from src.api.deps import get_current_user
 
-router = APIRouter()
+router = APIRouter(prefix="/tasks", tags=["tasks"])
 
 @router.get("/", response_model=List[TaskOut])
 async def read_tasks(
@@ -45,7 +45,7 @@ async def read_task(
         raise HTTPException(status_code=404, detail="Task not found")
     return task
 
-@router.put("/{id}", response_model=TaskOut)
+@router.patch("/{id}", response_model=TaskOut)
 async def update_task(
     id: int,
     task_update: TaskUpdate,
@@ -79,18 +79,4 @@ async def delete_task(
     await db.delete(task)
     await db.commit()
 
-@router.patch("/{id}/complete", response_model=TaskOut)
-async def complete_task(
-    id: int,
-    db: Annotated[AsyncSession, Depends(get_db)],
-    current_user: Annotated[User, Depends(get_current_user)]
-):
-    result = await db.execute(select(Task).where(Task.id == id, Task.user_id == current_user.id))
-    task = result.scalars().first()
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
-    
-    task.is_completed = not task.is_completed
-    await db.commit()
-    await db.refresh(task)
-    return task
+# Removed separate /{id}/complete endpoint in favor of generic PATCH

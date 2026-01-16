@@ -2,14 +2,14 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { authClient } from '@/lib/auth-client';
+import { useSession, signOut } from '@/lib/auth-client';
 
 export default function Navbar() {
-  const { data: session } = authClient.useSession();
+  const { user, isLoading } = useSession();
   const router = useRouter();
 
   const handleLogout = async () => {
-    await authClient.signOut();
+    await signOut();
     router.push('/login');
   };
 
@@ -27,14 +27,14 @@ export default function Navbar() {
 
           {/* User Profile / Auth Links */}
           <div className="flex items-center gap-4">
-            {session ? (
+            {user ? (
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 px-3 py-1.5 rounded-full border border-gray-100 dark:border-gray-700">
                     <div className="w-6 h-6 rounded-full bg-light-cyan/20 flex items-center justify-center text-xs text-light-cyan font-bold border border-light-cyan">
-                        {session.user.name?.[0]?.toUpperCase() || session.user.email?.[0]?.toUpperCase() || 'U'}
+                        {user.name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || 'U'}
                     </div>
                     <span className="text-sm font-medium hidden sm:block">
-                        {session.user.name || session.user.email}
+                        {user.name || user.email}
                     </span>
                 </div>
                 <button

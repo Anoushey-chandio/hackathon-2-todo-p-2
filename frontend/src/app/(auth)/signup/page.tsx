@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { authClient } from '@/lib/auth-client';
+import { signUp } from '@/lib/auth-client';
 import Image from 'next/image';
 
 export default function SignupPage() {
@@ -11,23 +11,22 @@ export default function SignupPage() {
   const [password, setPassword] = useState('');
   const router = useRouter();
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
-    await authClient.signUp.email({
-        email,
-        password,
-        name: username,
-    }, {
-        onSuccess: () => {
-             router.push('/login');
-        },
-        onError: (ctx) => {
-             setError(ctx.error.message);
-        }
-    });
+    try {
+      await signUp(email, password, username);
+      // Redirect to dashboard on success
+      router.push('/');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Sign up failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -50,6 +49,7 @@ export default function SignupPage() {
           onChange={(e) => setUsername(e.target.value)}
           className="p-3 border-2 rounded-xl border-gray-200 focus:border-light-purple outline-none transition-all dark:bg-gray-800 dark:border-gray-700"
           required
+          disabled={loading}
         />
         <input
           type="email"
@@ -58,6 +58,7 @@ export default function SignupPage() {
           onChange={(e) => setEmail(e.target.value)}
           className="p-3 border-2 rounded-xl border-gray-200 focus:border-light-purple outline-none transition-all dark:bg-gray-800 dark:border-gray-700"
           required
+          disabled={loading}
         />
         <input
           type="password"
@@ -66,14 +67,16 @@ export default function SignupPage() {
           onChange={(e) => setPassword(e.target.value)}
           className="p-3 border-2 rounded-xl border-gray-200 focus:border-light-purple outline-none transition-all dark:bg-gray-800 dark:border-gray-700"
           required
+          disabled={loading}
         />
-        <button type="submit" className="p-3 bg-white text-gray-700 border-2 border-gray-100 rounded-xl font-bold hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-gray-100">
-          Sign Up
+        <button 
+          type="submit" 
+          className="p-3 bg-white text-gray-700 border-2 border-gray-100 rounded-xl font-bold hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={loading}
+        >
+          {loading ? 'Signing up...' : 'Sign Up'}
         </button>
       </form>
-      <p className="mt-6 text-gray-600 dark:text-gray-400">
-        Already have an account? <a href="/login" className="text-light-purple font-bold hover:underline">Log in</a>
-      </p>
     </div>
   );
 }

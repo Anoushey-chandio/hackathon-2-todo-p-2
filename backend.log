@@ -1,0 +1,224 @@
+2026-01-15 16:31:16,945 INFO sqlalchemy.engine.Engine select pg_catalog.version()
+2026-01-15 16:31:16,947 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-01-15 16:31:17,764 INFO sqlalchemy.engine.Engine select current_schema()
+2026-01-15 16:31:17,766 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-01-15 16:31:18,582 INFO sqlalchemy.engine.Engine show standard_conforming_strings
+2026-01-15 16:31:18,583 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-01-15 16:31:19,198 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-01-15 16:31:19,203 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2026-01-15 16:31:19,205 INFO sqlalchemy.engine.Engine [generated in 0.00144s] ('user', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2026-01-15 16:31:19,820 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2026-01-15 16:31:19,821 INFO sqlalchemy.engine.Engine [cached since 0.6183s ago] ('tasks', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2026-01-15 16:31:20,027 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2026-01-15 16:31:20,029 INFO sqlalchemy.engine.Engine [cached since 0.8256s ago] ('session', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2026-01-15 16:31:20,234 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2026-01-15 16:31:20,247 INFO sqlalchemy.engine.Engine [cached since 1.044s ago] ('account', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2026-01-15 16:31:20,454 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2026-01-15 16:31:20,457 INFO sqlalchemy.engine.Engine [cached since 1.253s ago] ('verification', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2026-01-15 16:31:20,662 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2026-01-15 16:31:20,666 INFO sqlalchemy.engine.Engine [cached since 1.463s ago] ('jwks', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2026-01-15 16:31:20,873 INFO sqlalchemy.engine.Engine 
+CREATE TABLE tasks (
+	id SERIAL NOT NULL, 
+	title VARCHAR NOT NULL, 
+	description VARCHAR, 
+	is_completed BOOLEAN NOT NULL, 
+	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	updated_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	user_id VARCHAR NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(user_id) REFERENCES "user" (id)
+)
+
+
+2026-01-15 16:31:20,875 INFO sqlalchemy.engine.Engine [no key 0.00147s] ()
+2026-01-15 16:31:21,328 INFO sqlalchemy.engine.Engine CREATE INDEX ix_tasks_title ON tasks (title)
+2026-01-15 16:31:21,330 INFO sqlalchemy.engine.Engine [no key 0.00138s] ()
+2026-01-15 16:31:21,750 INFO sqlalchemy.engine.Engine COMMIT
+2026-01-15 16:31:23,838 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-01-15 16:31:23,855 INFO sqlalchemy.engine.Engine SELECT "user".id, "user".name, "user".email, "user"."emailVerified", "user".image, "user".password, "user"."createdAt", "user"."updatedAt" 
+FROM "user" 
+WHERE "user".email = $1::VARCHAR
+2026-01-15 16:31:23,856 INFO sqlalchemy.engine.Engine [generated in 0.00154s] ('test.user.1768523482@example.com',)
+2026-01-15 16:31:24,773 INFO sqlalchemy.engine.Engine INSERT INTO "user" (id, name, email, "emailVerified", image, password, "createdAt", "updatedAt") VALUES ($1::VARCHAR, $2::VARCHAR, $3::VARCHAR, $4::BOOLEAN, $5::VARCHAR, $6::VARCHAR, $7::TIMESTAMP WITH TIME ZONE, $8::TIMESTAMP WITH TIME ZONE)
+2026-01-15 16:31:24,775 INFO sqlalchemy.engine.Engine [generated in 0.00146s] ('41814fed-6cb4-4638-8871-408379815476', 'Test User', 'test.user.1768523482@example.com', False, None, '$2b$12$WTSjNtW2iT0tOpZN6cHdLuZ.tawoB4ULhuk0JTAzf3QFctLCBQxTy', datetime.datetime(2026, 1, 16, 0, 31, 24, 771164, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 1, 16, 0, 31, 24, 771168, tzinfo=datetime.timezone.utc))
+2026-01-15 16:31:25,185 INFO sqlalchemy.engine.Engine COMMIT
+2026-01-15 16:31:26,005 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-01-15 16:31:26,008 INFO sqlalchemy.engine.Engine SELECT "user".id, "user".name, "user".email, "user"."emailVerified", "user".image, "user".password, "user"."createdAt", "user"."updatedAt" 
+FROM "user" 
+WHERE "user".id = $1::VARCHAR
+2026-01-15 16:31:26,010 INFO sqlalchemy.engine.Engine [generated in 0.00145s] ('41814fed-6cb4-4638-8871-408379815476',)
+2026-01-15 16:31:26,627 INFO sqlalchemy.engine.Engine INSERT INTO session (id, "expiresAt", "ipAddress", "userAgent", "userId", token, "createdAt", "updatedAt") VALUES ($1::VARCHAR, $2::TIMESTAMP WITH TIME ZONE, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR, $7::TIMESTAMP WITH TIME ZONE, $8::TIMESTAMP WITH TIME ZONE)
+2026-01-15 16:31:26,628 INFO sqlalchemy.engine.Engine [generated in 0.00135s] ('547768cc-92c3-496f-9643-eefff1c6e963', datetime.datetime(2026, 1, 16, 1, 1, 26, 625663, tzinfo=datetime.timezone.utc), None, None, '41814fed-6cb4-4638-8871-408379815476', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MTgxNGZlZC02Y2I0LTQ2MzgtODg3MS00MDgzNzk4MTU0NzYiLCJlbWFpbCI6InRlc3QudXNlci4xNzY4NTIzNDgyQGV4YW1wbGUuY29tIiwidHlwZSI6ImFjY2VzcyIsImV4cCI6MTc2ODUyNTI4NiwiaWF0IjoxNzY4NTIzNDg2fQ.EQ6pq-KVvTZTv2VuDyLJUmCSC37awCin-PUkE8lf5vc', datetime.datetime(2026, 1, 16, 0, 31, 26, 625663, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 1, 16, 0, 31, 26, 625663, tzinfo=datetime.timezone.utc))
+2026-01-15 16:31:27,039 INFO sqlalchemy.engine.Engine COMMIT
+INFO:     127.0.0.1:63137 - "POST /api/auth/sign-up HTTP/1.1" 200 OK
+2026-01-15 16:31:27,866 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-01-15 16:31:27,867 INFO sqlalchemy.engine.Engine SELECT "user".id, "user".name, "user".email, "user"."emailVerified", "user".image, "user".password, "user"."createdAt", "user"."updatedAt" 
+FROM "user" 
+WHERE "user".email = $1::VARCHAR
+2026-01-15 16:31:27,869 INFO sqlalchemy.engine.Engine [cached since 4.014s ago] ('test.user.1768523482@example.com',)
+2026-01-15 16:31:28,557 INFO sqlalchemy.engine.Engine INSERT INTO session (id, "expiresAt", "ipAddress", "userAgent", "userId", token, "createdAt", "updatedAt") VALUES ($1::VARCHAR, $2::TIMESTAMP WITH TIME ZONE, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR, $7::TIMESTAMP WITH TIME ZONE, $8::TIMESTAMP WITH TIME ZONE)
+2026-01-15 16:31:28,559 INFO sqlalchemy.engine.Engine [cached since 1.932s ago] ('8273ef1a-099f-4b9c-b7b7-c9dd2cc4a8ea', datetime.datetime(2026, 1, 16, 1, 1, 28, 557086, tzinfo=datetime.timezone.utc), None, None, '41814fed-6cb4-4638-8871-408379815476', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MTgxNGZlZC02Y2I0LTQ2MzgtODg3MS00MDgzNzk4MTU0NzYiLCJlbWFpbCI6InRlc3QudXNlci4xNzY4NTIzNDgyQGV4YW1wbGUuY29tIiwidHlwZSI6ImFjY2VzcyIsImV4cCI6MTc2ODUyNTI4OCwiaWF0IjoxNzY4NTIzNDg4fQ.woh6ivHov10sg5pTGJQODVhg8SmhwKJ68ds44aUBjpw', datetime.datetime(2026, 1, 16, 0, 31, 28, 557086, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 1, 16, 0, 31, 28, 557086, tzinfo=datetime.timezone.utc))
+2026-01-15 16:31:28,765 INFO sqlalchemy.engine.Engine COMMIT
+2026-01-15 16:31:29,583 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-01-15 16:31:29,585 INFO sqlalchemy.engine.Engine UPDATE "user" SET "updatedAt"=$1::TIMESTAMP WITH TIME ZONE WHERE "user".id = $2::VARCHAR
+2026-01-15 16:31:29,587 INFO sqlalchemy.engine.Engine [generated in 0.00137s] (datetime.datetime(2026, 1, 16, 0, 31, 28, 971291, tzinfo=datetime.timezone.utc), '41814fed-6cb4-4638-8871-408379815476')
+2026-01-15 16:31:30,200 INFO sqlalchemy.engine.Engine COMMIT
+2026-01-15 16:31:31,019 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-01-15 16:31:31,021 INFO sqlalchemy.engine.Engine SELECT "user".id, "user".name, "user".email, "user"."emailVerified", "user".image, "user".password, "user"."createdAt", "user"."updatedAt" 
+FROM "user" 
+WHERE "user".id = $1::VARCHAR
+2026-01-15 16:31:31,023 INFO sqlalchemy.engine.Engine [cached since 5.014s ago] ('41814fed-6cb4-4638-8871-408379815476',)
+2026-01-15 16:31:31,433 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:63137 - "POST /api/auth/sign-in HTTP/1.1" 200 OK
+2026-01-15 16:31:32,259 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-01-15 16:31:32,262 INFO sqlalchemy.engine.Engine SELECT session.id, session."expiresAt", session."ipAddress", session."userAgent", session."userId", session.token, session."createdAt", session."updatedAt" 
+FROM session 
+WHERE session.token = $1::VARCHAR
+2026-01-15 16:31:32,263 INFO sqlalchemy.engine.Engine [generated in 0.00154s] ('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MTgxNGZlZC02Y2I0LTQ2MzgtODg3MS00MDgzNzk4MTU0NzYiLCJlbWFpbCI6InRlc3QudXNlci4xNzY4NTIzNDgyQGV4YW1wbGUuY29tIiwidHlwZSI6ImFjY2VzcyIsImV4cCI6MTc2ODUyNTI4OCwiaWF0IjoxNzY4NTIzNDg4fQ.woh6ivHov10sg5pTGJQODVhg8SmhwKJ68ds44aUBjpw',)
+2026-01-15 16:31:32,879 INFO sqlalchemy.engine.Engine SELECT "user".id, "user".name, "user".email, "user"."emailVerified", "user".image, "user".password, "user"."createdAt", "user"."updatedAt" 
+FROM "user" 
+WHERE "user".id = $1::VARCHAR
+2026-01-15 16:31:32,880 INFO sqlalchemy.engine.Engine [generated in 0.00149s] ('41814fed-6cb4-4638-8871-408379815476',)
+2026-01-15 16:31:33,087 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:63137 - "GET /api/auth/session HTTP/1.1" 200 OK
+2026-01-15 16:31:33,908 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-01-15 16:31:33,910 INFO sqlalchemy.engine.Engine SELECT session.id, session."expiresAt", session."ipAddress", session."userAgent", session."userId", session.token, session."createdAt", session."updatedAt" 
+FROM session 
+WHERE session.token = $1::VARCHAR
+2026-01-15 16:31:33,911 INFO sqlalchemy.engine.Engine [cached since 1.65s ago] ('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MTgxNGZlZC02Y2I0LTQ2MzgtODg3MS00MDgzNzk4MTU0NzYiLCJlbWFpbCI6InRlc3QudXNlci4xNzY4NTIzNDgyQGV4YW1wbGUuY29tIiwidHlwZSI6ImFjY2VzcyIsImV4cCI6MTc2ODUyNTI4OCwiaWF0IjoxNzY4NTIzNDg4fQ.woh6ivHov10sg5pTGJQODVhg8SmhwKJ68ds44aUBjpw',)
+2026-01-15 16:31:34,323 INFO sqlalchemy.engine.Engine DELETE FROM session WHERE session.id = $1::VARCHAR
+2026-01-15 16:31:34,325 INFO sqlalchemy.engine.Engine [generated in 0.00153s] ('8273ef1a-099f-4b9c-b7b7-c9dd2cc4a8ea',)
+2026-01-15 16:31:34,734 INFO sqlalchemy.engine.Engine COMMIT
+INFO:     127.0.0.1:63137 - "POST /api/auth/sign-out HTTP/1.1" 200 OK
+2026-01-15 16:31:58,060 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-01-15 16:31:58,062 INFO sqlalchemy.engine.Engine SELECT "user".id, "user".name, "user".email, "user"."emailVerified", "user".image, "user".password, "user"."createdAt", "user"."updatedAt" 
+FROM "user" 
+WHERE "user".email = $1::VARCHAR
+2026-01-15 16:31:58,063 INFO sqlalchemy.engine.Engine [cached since 34.21s ago] ('user.a.1768523517@example.com',)
+2026-01-15 16:31:58,748 INFO sqlalchemy.engine.Engine INSERT INTO "user" (id, name, email, "emailVerified", image, password, "createdAt", "updatedAt") VALUES ($1::VARCHAR, $2::VARCHAR, $3::VARCHAR, $4::BOOLEAN, $5::VARCHAR, $6::VARCHAR, $7::TIMESTAMP WITH TIME ZONE, $8::TIMESTAMP WITH TIME ZONE)
+2026-01-15 16:31:58,749 INFO sqlalchemy.engine.Engine [cached since 33.98s ago] ('90968422-a4bc-4c17-a0a6-048eee696e02', 'User A', 'user.a.1768523517@example.com', False, None, '$2b$12$X6..yf8X5D.TBolNze7yKemS9JC4H2sdm8b2VYKeey.R75ELPJbvi', datetime.datetime(2026, 1, 16, 0, 31, 58, 747558, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 1, 16, 0, 31, 58, 747562, tzinfo=datetime.timezone.utc))
+2026-01-15 16:31:58,955 INFO sqlalchemy.engine.Engine COMMIT
+2026-01-15 16:31:59,773 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-01-15 16:31:59,775 INFO sqlalchemy.engine.Engine SELECT "user".id, "user".name, "user".email, "user"."emailVerified", "user".image, "user".password, "user"."createdAt", "user"."updatedAt" 
+FROM "user" 
+WHERE "user".id = $1::VARCHAR
+2026-01-15 16:31:59,776 INFO sqlalchemy.engine.Engine [cached since 33.77s ago] ('90968422-a4bc-4c17-a0a6-048eee696e02',)
+2026-01-15 16:32:00,189 INFO sqlalchemy.engine.Engine INSERT INTO session (id, "expiresAt", "ipAddress", "userAgent", "userId", token, "createdAt", "updatedAt") VALUES ($1::VARCHAR, $2::TIMESTAMP WITH TIME ZONE, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR, $7::TIMESTAMP WITH TIME ZONE, $8::TIMESTAMP WITH TIME ZONE)
+2026-01-15 16:32:00,190 INFO sqlalchemy.engine.Engine [cached since 33.56s ago] ('6c2d60f6-4dbb-49fa-ae5b-aa604ed62c76', datetime.datetime(2026, 1, 16, 1, 2, 0, 188610, tzinfo=datetime.timezone.utc), None, None, '90968422-a4bc-4c17-a0a6-048eee696e02', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5MDk2ODQyMi1hNGJjLTRjMTctYTBhNi0wNDhlZWU2OTZlMDIiLCJlbWFpbCI6InVzZXIuYS4xNzY4NTIzNTE3QGV4YW1wbGUuY29tIiwidHlwZSI6ImFjY2VzcyIsImV4cCI6MTc2ODUyNTMyMCwiaWF0IjoxNzY4NTIzNTIwfQ.nZl4B1cGU2Kl3MWnIHFbtbqmkjjTIPXUL_LQr8wiV6E', datetime.datetime(2026, 1, 16, 0, 32, 0, 188610, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 1, 16, 0, 32, 0, 188610, tzinfo=datetime.timezone.utc))
+2026-01-15 16:32:00,396 INFO sqlalchemy.engine.Engine COMMIT
+INFO:     127.0.0.1:63158 - "POST /api/auth/sign-up HTTP/1.1" 200 OK
+2026-01-15 16:32:01,223 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-01-15 16:32:01,224 INFO sqlalchemy.engine.Engine SELECT "user".id, "user".name, "user".email, "user"."emailVerified", "user".image, "user".password, "user"."createdAt", "user"."updatedAt" 
+FROM "user" 
+WHERE "user".email = $1::VARCHAR
+2026-01-15 16:32:01,226 INFO sqlalchemy.engine.Engine [cached since 37.37s ago] ('user.b.1768523520@example.com',)
+2026-01-15 16:32:01,910 INFO sqlalchemy.engine.Engine INSERT INTO "user" (id, name, email, "emailVerified", image, password, "createdAt", "updatedAt") VALUES ($1::VARCHAR, $2::VARCHAR, $3::VARCHAR, $4::BOOLEAN, $5::VARCHAR, $6::VARCHAR, $7::TIMESTAMP WITH TIME ZONE, $8::TIMESTAMP WITH TIME ZONE)
+2026-01-15 16:32:01,911 INFO sqlalchemy.engine.Engine [cached since 37.14s ago] ('3299137f-1052-4a79-a9df-f7b7461117cf', 'User B', 'user.b.1768523520@example.com', False, None, '$2b$12$1L6XM83yIbphbHcfZlJ3hubNycS3T/.YaWYjQFOUb9F9MiwbYYgny', datetime.datetime(2026, 1, 16, 0, 32, 1, 909909, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 1, 16, 0, 32, 1, 909914, tzinfo=datetime.timezone.utc))
+2026-01-15 16:32:02,118 INFO sqlalchemy.engine.Engine COMMIT
+2026-01-15 16:32:02,935 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-01-15 16:32:02,936 INFO sqlalchemy.engine.Engine SELECT "user".id, "user".name, "user".email, "user"."emailVerified", "user".image, "user".password, "user"."createdAt", "user"."updatedAt" 
+FROM "user" 
+WHERE "user".id = $1::VARCHAR
+2026-01-15 16:32:02,937 INFO sqlalchemy.engine.Engine [cached since 36.93s ago] ('3299137f-1052-4a79-a9df-f7b7461117cf',)
+2026-01-15 16:32:03,355 INFO sqlalchemy.engine.Engine INSERT INTO session (id, "expiresAt", "ipAddress", "userAgent", "userId", token, "createdAt", "updatedAt") VALUES ($1::VARCHAR, $2::TIMESTAMP WITH TIME ZONE, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR, $7::TIMESTAMP WITH TIME ZONE, $8::TIMESTAMP WITH TIME ZONE)
+2026-01-15 16:32:03,356 INFO sqlalchemy.engine.Engine [cached since 36.73s ago] ('b04c61c5-3e48-4c10-85ff-c4a91cb8c42d', datetime.datetime(2026, 1, 16, 1, 2, 3, 355013, tzinfo=datetime.timezone.utc), None, None, '3299137f-1052-4a79-a9df-f7b7461117cf', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzMjk5MTM3Zi0xMDUyLTRhNzktYTlkZi1mN2I3NDYxMTE3Y2YiLCJlbWFpbCI6InVzZXIuYi4xNzY4NTIzNTIwQGV4YW1wbGUuY29tIiwidHlwZSI6ImFjY2VzcyIsImV4cCI6MTc2ODUyNTMyMywiaWF0IjoxNzY4NTIzNTIzfQ.6SUylFvNbneekXlFSKIalzDat-vz7qArOQLCMGbyqdA', datetime.datetime(2026, 1, 16, 0, 32, 3, 355013, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 1, 16, 0, 32, 3, 355013, tzinfo=datetime.timezone.utc))
+2026-01-15 16:32:03,562 INFO sqlalchemy.engine.Engine COMMIT
+INFO:     127.0.0.1:63158 - "POST /api/auth/sign-up HTTP/1.1" 200 OK
+2026-01-15 16:32:04,393 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-01-15 16:32:04,396 INFO sqlalchemy.engine.Engine SELECT session.id, session."expiresAt", session."ipAddress", session."userAgent", session."userId", session.token, session."createdAt", session."updatedAt" 
+FROM session 
+WHERE session.token = $1::VARCHAR
+2026-01-15 16:32:04,397 INFO sqlalchemy.engine.Engine [generated in 0.00134s] ('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5MDk2ODQyMi1hNGJjLTRjMTctYTBhNi0wNDhlZWU2OTZlMDIiLCJlbWFpbCI6InVzZXIuYS4xNzY4NTIzNTE3QGV4YW1wbGUuY29tIiwidHlwZSI6ImFjY2VzcyIsImV4cCI6MTc2ODUyNTMyMCwiaWF0IjoxNzY4NTIzNTIwfQ.nZl4B1cGU2Kl3MWnIHFbtbqmkjjTIPXUL_LQr8wiV6E',)
+2026-01-15 16:32:04,808 INFO sqlalchemy.engine.Engine SELECT "user".id, "user".name, "user".email, "user"."emailVerified", "user".image, "user".password, "user"."createdAt", "user"."updatedAt" 
+FROM "user" 
+WHERE "user".id = $1::VARCHAR
+2026-01-15 16:32:04,810 INFO sqlalchemy.engine.Engine [generated in 0.00143s] ('90968422-a4bc-4c17-a0a6-048eee696e02',)
+2026-01-15 16:32:05,019 INFO sqlalchemy.engine.Engine INSERT INTO tasks (title, description, is_completed, user_id) VALUES ($1::VARCHAR, $2::VARCHAR, $3::BOOLEAN, $4::VARCHAR) RETURNING tasks.id, tasks.created_at, tasks.updated_at
+2026-01-15 16:32:05,020 INFO sqlalchemy.engine.Engine [generated in 0.00140s] ('Task for User A', None, False, '90968422-a4bc-4c17-a0a6-048eee696e02')
+2026-01-15 16:32:05,434 INFO sqlalchemy.engine.Engine COMMIT
+2026-01-15 16:32:06,255 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-01-15 16:32:06,257 INFO sqlalchemy.engine.Engine SELECT tasks.id, tasks.title, tasks.description, tasks.is_completed, tasks.created_at, tasks.updated_at, tasks.user_id 
+FROM tasks 
+WHERE tasks.id = $1::INTEGER
+2026-01-15 16:32:06,259 INFO sqlalchemy.engine.Engine [generated in 0.00132s] (1,)
+2026-01-15 16:32:06,917 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:63158 - "POST /api/tasks/ HTTP/1.1" 201 Created
+2026-01-15 16:32:07,743 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-01-15 16:32:07,744 INFO sqlalchemy.engine.Engine SELECT session.id, session."expiresAt", session."ipAddress", session."userAgent", session."userId", session.token, session."createdAt", session."updatedAt" 
+FROM session 
+WHERE session.token = $1::VARCHAR
+2026-01-15 16:32:07,746 INFO sqlalchemy.engine.Engine [cached since 3.35s ago] ('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzMjk5MTM3Zi0xMDUyLTRhNzktYTlkZi1mN2I3NDYxMTE3Y2YiLCJlbWFpbCI6InVzZXIuYi4xNzY4NTIzNTIwQGV4YW1wbGUuY29tIiwidHlwZSI6ImFjY2VzcyIsImV4cCI6MTc2ODUyNTMyMywiaWF0IjoxNzY4NTIzNTIzfQ.6SUylFvNbneekXlFSKIalzDat-vz7qArOQLCMGbyqdA',)
+2026-01-15 16:32:08,156 INFO sqlalchemy.engine.Engine SELECT "user".id, "user".name, "user".email, "user"."emailVerified", "user".image, "user".password, "user"."createdAt", "user"."updatedAt" 
+FROM "user" 
+WHERE "user".id = $1::VARCHAR
+2026-01-15 16:32:08,157 INFO sqlalchemy.engine.Engine [cached since 3.349s ago] ('3299137f-1052-4a79-a9df-f7b7461117cf',)
+2026-01-15 16:32:08,365 INFO sqlalchemy.engine.Engine SELECT tasks.id, tasks.title, tasks.description, tasks.is_completed, tasks.created_at, tasks.updated_at, tasks.user_id 
+FROM tasks 
+WHERE tasks.id = $1::INTEGER AND tasks.user_id = $2::VARCHAR
+2026-01-15 16:32:08,366 INFO sqlalchemy.engine.Engine [generated in 0.00136s] (1, '3299137f-1052-4a79-a9df-f7b7461117cf')
+2026-01-15 16:32:08,776 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:63158 - "GET /api/tasks/1 HTTP/1.1" 404 Not Found
+2026-01-15 16:32:09,602 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-01-15 16:32:09,603 INFO sqlalchemy.engine.Engine SELECT session.id, session."expiresAt", session."ipAddress", session."userAgent", session."userId", session.token, session."createdAt", session."updatedAt" 
+FROM session 
+WHERE session.token = $1::VARCHAR
+2026-01-15 16:32:09,605 INFO sqlalchemy.engine.Engine [cached since 5.209s ago] ('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzMjk5MTM3Zi0xMDUyLTRhNzktYTlkZi1mN2I3NDYxMTE3Y2YiLCJlbWFpbCI6InVzZXIuYi4xNzY4NTIzNTIwQGV4YW1wbGUuY29tIiwidHlwZSI6ImFjY2VzcyIsImV4cCI6MTc2ODUyNTMyMywiaWF0IjoxNzY4NTIzNTIzfQ.6SUylFvNbneekXlFSKIalzDat-vz7qArOQLCMGbyqdA',)
+2026-01-15 16:32:10,016 INFO sqlalchemy.engine.Engine SELECT "user".id, "user".name, "user".email, "user"."emailVerified", "user".image, "user".password, "user"."createdAt", "user"."updatedAt" 
+FROM "user" 
+WHERE "user".id = $1::VARCHAR
+2026-01-15 16:32:10,017 INFO sqlalchemy.engine.Engine [cached since 5.209s ago] ('3299137f-1052-4a79-a9df-f7b7461117cf',)
+2026-01-15 16:32:10,225 INFO sqlalchemy.engine.Engine SELECT tasks.id, tasks.title, tasks.description, tasks.is_completed, tasks.created_at, tasks.updated_at, tasks.user_id 
+FROM tasks 
+WHERE tasks.id = $1::INTEGER AND tasks.user_id = $2::VARCHAR
+2026-01-15 16:32:10,226 INFO sqlalchemy.engine.Engine [cached since 1.862s ago] (1, '3299137f-1052-4a79-a9df-f7b7461117cf')
+2026-01-15 16:32:10,433 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:63158 - "PATCH /api/tasks/1 HTTP/1.1" 404 Not Found
+2026-01-15 16:32:11,257 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-01-15 16:32:11,259 INFO sqlalchemy.engine.Engine SELECT session.id, session."expiresAt", session."ipAddress", session."userAgent", session."userId", session.token, session."createdAt", session."updatedAt" 
+FROM session 
+WHERE session.token = $1::VARCHAR
+2026-01-15 16:32:11,260 INFO sqlalchemy.engine.Engine [cached since 6.864s ago] ('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzMjk5MTM3Zi0xMDUyLTRhNzktYTlkZi1mN2I3NDYxMTE3Y2YiLCJlbWFpbCI6InVzZXIuYi4xNzY4NTIzNTIwQGV4YW1wbGUuY29tIiwidHlwZSI6ImFjY2VzcyIsImV4cCI6MTc2ODUyNTMyMywiaWF0IjoxNzY4NTIzNTIzfQ.6SUylFvNbneekXlFSKIalzDat-vz7qArOQLCMGbyqdA',)
+2026-01-15 16:32:11,672 INFO sqlalchemy.engine.Engine SELECT "user".id, "user".name, "user".email, "user"."emailVerified", "user".image, "user".password, "user"."createdAt", "user"."updatedAt" 
+FROM "user" 
+WHERE "user".id = $1::VARCHAR
+2026-01-15 16:32:11,673 INFO sqlalchemy.engine.Engine [cached since 6.865s ago] ('3299137f-1052-4a79-a9df-f7b7461117cf',)
+2026-01-15 16:32:11,879 INFO sqlalchemy.engine.Engine SELECT tasks.id, tasks.title, tasks.description, tasks.is_completed, tasks.created_at, tasks.updated_at, tasks.user_id 
+FROM tasks 
+WHERE tasks.id = $1::INTEGER AND tasks.user_id = $2::VARCHAR
+2026-01-15 16:32:11,881 INFO sqlalchemy.engine.Engine [cached since 3.516s ago] (1, '3299137f-1052-4a79-a9df-f7b7461117cf')
+2026-01-15 16:32:12,087 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:63158 - "DELETE /api/tasks/1 HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:63243 - "GET /api/auth/session HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:63244 - "GET /api/auth/session HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:63245 - "GET /api/auth/session HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:63304 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63304 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+2026-01-15 16:41:22,141 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-01-15 16:41:22,143 INFO sqlalchemy.engine.Engine SELECT "user".id, "user".name, "user".email, "user"."emailVerified", "user".image, "user".password, "user"."createdAt", "user"."updatedAt" 
+FROM "user" 
+WHERE "user".email = $1::VARCHAR
+2026-01-15 16:41:22,144 INFO sqlalchemy.engine.Engine [cached since 598.3s ago] ('test.user.1768524079@example.com',)
+2026-01-15 16:41:23,233 INFO sqlalchemy.engine.Engine INSERT INTO "user" (id, name, email, "emailVerified", image, password, "createdAt", "updatedAt") VALUES ($1::VARCHAR, $2::VARCHAR, $3::VARCHAR, $4::BOOLEAN, $5::VARCHAR, $6::VARCHAR, $7::TIMESTAMP WITH TIME ZONE, $8::TIMESTAMP WITH TIME ZONE)
+2026-01-15 16:41:23,234 INFO sqlalchemy.engine.Engine [cached since 598.5s ago] ('5990e82f-1f7e-48b1-a5e1-3076b33afc25', 'Test User', 'test.user.1768524079@example.com', False, None, '$2b$12$mkBpE2Mmmwdx.nveon/PgewWGnECDK7SCBu/lTE6HMw4TyN5H5bVK', datetime.datetime(2026, 1, 16, 0, 41, 23, 232258, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 1, 16, 0, 41, 23, 232262, tzinfo=datetime.timezone.utc))
+2026-01-15 16:41:23,633 INFO sqlalchemy.engine.Engine COMMIT
+2026-01-15 16:41:24,627 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-01-15 16:41:24,629 INFO sqlalchemy.engine.Engine SELECT "user".id, "user".name, "user".email, "user"."emailVerified", "user".image, "user".password, "user"."createdAt", "user"."updatedAt" 
+FROM "user" 
+WHERE "user".id = $1::VARCHAR
+2026-01-15 16:41:24,630 INFO sqlalchemy.engine.Engine [cached since 598.6s ago] ('5990e82f-1f7e-48b1-a5e1-3076b33afc25',)
+2026-01-15 16:41:25,231 INFO sqlalchemy.engine.Engine INSERT INTO session (id, "expiresAt", "ipAddress", "userAgent", "userId", token, "createdAt", "updatedAt") VALUES ($1::VARCHAR, $2::TIMESTAMP WITH TIME ZONE, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR, $7::TIMESTAMP WITH TIME ZONE, $8::TIMESTAMP WITH TIME ZONE)
+2026-01-15 16:41:25,232 INFO sqlalchemy.engine.Engine [cached since 598.6s ago] ('33fceba9-0ab8-4e08-bdaf-3bdbf2a89a4e', datetime.datetime(2026, 1, 16, 1, 11, 25, 230961, tzinfo=datetime.timezone.utc), None, None, '5990e82f-1f7e-48b1-a5e1-3076b33afc25', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1OTkwZTgyZi0xZjdlLTQ4YjEtYTVlMS0zMDc2YjMzYWZjMjUiLCJlbWFpbCI6InRlc3QudXNlci4xNzY4NTI0MDc5QGV4YW1wbGUuY29tIiwidHlwZSI6ImFjY2VzcyIsImV4cCI6MTc2ODUyNTg4NSwiaWF0IjoxNzY4NTI0MDg1fQ.5eXRHmk5MYGGmT-gpJjervbdOLV-t9fft_tpkgAkxzg', datetime.datetime(2026, 1, 16, 0, 41, 25, 230961, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 1, 16, 0, 41, 25, 230961, tzinfo=datetime.timezone.utc))
+2026-01-15 16:41:25,638 INFO sqlalchemy.engine.Engine COMMIT

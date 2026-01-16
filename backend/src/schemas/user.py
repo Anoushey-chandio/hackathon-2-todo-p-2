@@ -16,7 +16,11 @@ class UserLogin(UserBase):
 
 class UserOut(UserBase):
     id: str
-    created_at: datetime
+    name: str
+    emailVerified: bool
+    image: Optional[str] = None
+    createdAt: datetime
+    updatedAt: datetime
     
     class Config:
         from_attributes = True

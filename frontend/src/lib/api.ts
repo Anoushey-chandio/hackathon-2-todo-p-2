@@ -1,4 +1,4 @@
-import { authClient } from '@/lib/auth-client';
+import { sessionManager } from '@/lib/session';
 
 // Use the Next.js proxy path to ensure cookies are passed correctly
 // The rewrite in next.config.ts maps /api/py -> http://127.0.0.1:8000/api
@@ -25,16 +25,19 @@ export async function fetchClient(path: string, options: RequestInit = {}) {
   headers.set('X-Requested-With', 'XMLHttpRequest');
 
   // Add Authorization Bearer Token if session exists
-  // We explicitly fetch the session to get the token.
-  // Better Auth caches this effectively.
-  try {
-      const session = await authClient.getSession();
-      const token = session.data?.session?.token;
-      if (token) {
-          headers.set('Authorization', `Bearer ${token}`);
+  // The token comes from the backend session, which is stored in a cookie
+  // The backend's get_token dependency checks for Bearer token first, then the cookie
+  // So we mainly rely on cookies being sent via credentials: 'include'
+  // But we can also try to get the token from localStorage if it was stored
+  if (typeof window !== 'undefined') {
+    try {
+      const storedToken = localStorage.getItem('auth_token');
+      if (storedToken) {
+        headers.set('Authorization', `Bearer ${storedToken}`);
       }
-  } catch {
-      // Ignore session fetch errors, proceed without token (might be public endpoint or will fail 401)
+    } catch {
+      // Ignore localStorage errors
+    }
   }
 
   // Note: Setting Origin manually in browser `fetch` is often ignored by browsers for security,
@@ -60,13 +63,9 @@ export async function fetchClient(path: string, options: RequestInit = {}) {
     // Only handle 401 if it's not an auth-related request
     if (response.status === 401 && !path.includes('/auth/')) {
       if (typeof window !== 'undefined') {
-        // Double check session before redirecting
-        const session = await authClient.getSession();
-        if (!session.data) {
-          // Only redirect if we definitely don't have a session
-          window.location.href = '/login';
-        }
-        // If we DO have a session but get 401, it might be a token mismatch or expiry.
+        // Clear session and redirect to login
+        sessionManager.clearSession();
+        window.location.href = '/login';
       }
     }
 

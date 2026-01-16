@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { authClient } from '@/lib/auth-client';
+import { signIn } from '@/lib/auth-client';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -11,22 +11,22 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const router = useRouter();
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
-    await authClient.signIn.email({
-      email,
-      password,
-    }, {
-      onSuccess: () => {
-         router.push('/');
-      },
-      onError: (ctx) => {
-         setError(ctx.error.message);
-      }
-    });
+    try {
+      await signIn(email, password);
+      // Redirect to dashboard on success
+      router.push('/');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Sign in failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -49,6 +49,7 @@ export default function LoginPage() {
           onChange={(e) => setEmail(e.target.value)}
           className="p-3 border-2 rounded-xl border-gray-200 focus:border-light-purple outline-none transition-all dark:bg-gray-800 dark:border-gray-700"
           required
+          disabled={loading}
         />
         <input
           type="password"
@@ -57,12 +58,17 @@ export default function LoginPage() {
           onChange={(e) => setPassword(e.target.value)}
           className="p-3 border-2 rounded-xl border-gray-200 focus:border-light-purple outline-none transition-all dark:bg-gray-800 dark:border-gray-700"
           required
+          disabled={loading}
         />
-        <button type="submit" className="p-3 bg-white text-gray-700 border-2 border-gray-100 rounded-xl font-bold hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-gray-100">
-          Sign In
+        <button 
+          type="submit" 
+          className="p-3 bg-white text-gray-700 border-2 border-gray-100 rounded-xl font-bold hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={loading}
+        >
+          {loading ? 'Signing in...' : 'Sign In'}
         </button>
       </form>
-            <p className="text-gray-500 dark:text-gray-400">Don&apos;t have an account? <Link href="/signup" className="text-light-purple font-semibold hover:underline">Sign up</Link></p>
+      <p className="text-gray-500 dark:text-gray-400 mt-6">Don&apos;t have an account? <Link href="/signup" className="text-light-purple font-semibold hover:underline">Sign up</Link></p>
     </div>
   );
 }

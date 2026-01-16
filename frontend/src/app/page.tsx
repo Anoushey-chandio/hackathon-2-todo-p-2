@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { authClient } from '@/lib/auth-client';
+import { useSession } from '@/lib/auth-client';
 
 export default function WelcomePage() {
-  const { data: session } = authClient.useSession();
+  const { user, isLoading } = useSession();
 
   return (
     <div className="flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-700 min-h-[calc(100vh-64px)]">
@@ -19,7 +19,7 @@ export default function WelcomePage() {
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
-          {session ? (
+          {!isLoading && user ? (
             <Link 
               href="/tasks" 
               className="px-8 py-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-lg font-bold rounded-2xl hover:scale-105 transition-transform shadow-xl"

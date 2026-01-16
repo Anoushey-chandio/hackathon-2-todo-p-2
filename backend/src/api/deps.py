@@ -20,8 +20,11 @@ async def get_token(
     if token:
         return token
     
-    # Check cookie
+    # Check cookies
     cookie_token = request.cookies.get("better-auth.session_token")
+    if not cookie_token:
+        cookie_token = request.cookies.get("token")
+        
     if cookie_token:
         return cookie_token
         

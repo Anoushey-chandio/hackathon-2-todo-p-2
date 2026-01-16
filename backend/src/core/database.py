@@ -7,6 +7,7 @@ from sqlalchemy.engine.url import make_url
 from src.models import User, Task, Session, Account, Verification, Jwks
 
 database_url = settings.DATABASE_URL
+DATABASE_URL = database_url  # Export for verification scripts
 # Ensure async driver
 if "postgresql://" in database_url or "postgresql+asyncpg://" in database_url:
     url = make_url(database_url)
@@ -36,7 +37,7 @@ async_engine = create_async_engine(
 
 # Async session factory
 async def get_db() -> AsyncSession:
-    async with AsyncSession(async_engine) as session:
+    async with AsyncSession(async_engine, expire_on_commit=False) as session:
         yield session
 
 async def init_db():

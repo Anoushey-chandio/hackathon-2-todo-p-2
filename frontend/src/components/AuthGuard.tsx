@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
+import { useSession } from "@/lib/auth-client";
 
 export default function AuthGuard({
   children,
@@ -11,10 +11,10 @@ export default function AuthGuard({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { data: session, isPending, error } = authClient.useSession();
+  const { user, token, isLoading, error } = useSession();
 
   useEffect(() => {
-    if (isPending) return;
+    if (isLoading) return;
 
     // Define route groups
     const authRoutes = ['/login', '/signup'];
@@ -22,7 +22,7 @@ export default function AuthGuard({
     const isProtectedRoute = pathname.startsWith('/tasks');
     const isAuthRoute = authRoutes.includes(pathname);
 
-    if (session && !error) {
+    if (user && token && !error) {
       if (isAuthRoute) {
         // If logged in and trying to access login/signup, redirect to dashboard
         router.push('/');
@@ -34,13 +34,13 @@ export default function AuthGuard({
         router.push('/login');
       }
     }
-  }, [pathname, router, session, isPending, error]);
+  }, [pathname, router, user, token, isLoading, error]);
 
   const isProtectedRoute = pathname.startsWith('/tasks');
 
-  // Show spinner ONLY if we are pending AND on a protected route.
+  // Show spinner ONLY if we are loading AND on a protected route.
   // This allows Navbar and Public pages to render immediately.
-  if (isPending && isProtectedRoute) {
+  if (isLoading && isProtectedRoute) {
      return (
         <div className="flex items-center justify-center min-h-screen">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
@@ -48,8 +48,8 @@ export default function AuthGuard({
      );
   }
 
-  // If we are NOT pending, but unauthorized for a protected route, we render nothing (useEffect redirects)
-  if (!isPending && !session && isProtectedRoute) {
+  // If we are NOT loading, but unauthorized for a protected route, we render nothing (useEffect redirects)
+  if (!isLoading && !user && isProtectedRoute) {
       return null; 
   }
 
