@@ -1,49 +1,39 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export function middleware(request: NextRequest) {
-  // Use the session token from cookies to determine auth state
-  // Better Auth / our implementation uses "better-auth.session_token" or similar
-  // We can also check for a custom token if we set one
-  const sessionToken = request.cookies.get('better-auth.session_token')?.value || 
-                       request.cookies.get('token')?.value;
+export function middleware(req: NextRequest) {
+  const { pathname, searchParams } = req.nextUrl;
 
-  const { pathname } = request.nextUrl;
-
-  // 1. Protect Dashboard Routes
-  // If trying to access dashboard and NOT logged in -> Redirect to Login
-  if (pathname.startsWith('/tasks')) {
-    if (!sessionToken) {
-      const url = request.nextUrl.clone();
-      url.pathname = '/login';
-      return NextResponse.redirect(url);
-    }
+  // Skip static files, RSC requests, and API routes
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/api') ||
+    searchParams.has('_rsc')
+  ) {
+    return NextResponse.next();
   }
 
-  // 2. Protect Auth Routes
-  // If trying to access login/signup and ARE logged in -> Redirect to Dashboard
-  if (pathname === '/login' || pathname === '/signup') {
-    if (sessionToken) {
-      const url = request.nextUrl.clone();
-      url.pathname = '/';
-      return NextResponse.redirect(url);
-    }
+  // Read session token from cookie
+  const token = req.cookies.get('access_token')?.value;
+
+  // Protect /tasks routes
+  if (pathname.startsWith('/tasks') && !token) {
+    const loginUrl = req.nextUrl.clone();
+    loginUrl.pathname = '/signin';
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // Redirect logged-in users away from auth pages
+  if ((pathname === '/signin' || pathname === '/signup') && token) {
+    const homeUrl = req.nextUrl.clone();
+    homeUrl.pathname = '/';
+    return NextResponse.redirect(homeUrl);
   }
 
   return NextResponse.next();
 }
 
-// Configure which paths the middleware runs on
+// Apply middleware to page routes only
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - assets (public assets)
-     */
-    '/((?!api|_next/static|_next/image|favicon.ico|assets).*)',
-  ],
+  matcher: ['/tasks/:path*', '/signin', '/signup', '/'],
 };

@@ -44,29 +44,29 @@ def test_sign_up():
             print(f"   Response: {response.text}")
             return None
         
-        data = response.json()
-        token = data.get("session", {}).get("access_token")
+        cookies = response.cookies
+        token = cookies.get("access_token")
         
         if not token:
-            print("❌ No access token in response")
+            print("❌ No access_token cookie in response")
             return None
         
+        data = response.json()
         print(f"✅ Sign up successful")
         print(f"   User: {data['user']['email']}")
-        print(f"   Token: {token[:50]}...")
-        return token
+        print(f"   Token (Cookie): {token[:50]}...")
+        return cookies
     except Exception as e:
         print(f"❌ Sign up error: {e}")
         return None
 
-def test_get_session(token):
+def test_get_session(cookies):
     """Test session retrieval"""
     print("\n👤 Testing get session...")
     try:
-        with httpx.Client() as client:
+        with httpx.Client(cookies=cookies) as client:
             response = client.get(
                 f"{BASE_URL}/api/auth/session",
-                headers={"Authorization": f"Bearer {token}"},
                 timeout=15,
             )
         
@@ -83,18 +83,17 @@ def test_get_session(token):
         print(f"❌ Get session error: {e}")
         return False
 
-def test_create_task(token):
+def test_create_task(cookies):
     """Test task creation"""
     print("\n📋 Testing create task...")
     try:
-        with httpx.Client() as client:
+        with httpx.Client(cookies=cookies) as client:
             response = client.post(
                 f"{BASE_URL}/api/tasks/",
                 json={
                     "title": "Test Task",
                     "description": "This is a test task",
                 },
-                headers={"Authorization": f"Bearer {token}"},
                 timeout=15,
             )
         
@@ -113,14 +112,13 @@ def test_create_task(token):
         print(f"❌ Create task error: {e}")
         return None
 
-def test_get_tasks(token):
+def test_get_tasks(cookies):
     """Test retrieving tasks"""
     print("\n📚 Testing get tasks...")
     try:
-        with httpx.Client() as client:
+        with httpx.Client(cookies=cookies) as client:
             response = client.get(
                 f"{BASE_URL}/api/tasks/",
-                headers={"Authorization": f"Bearer {token}"},
                 timeout=15,
             )
         
@@ -139,15 +137,14 @@ def test_get_tasks(token):
         print(f"❌ Get tasks error: {e}")
         return False
 
-def test_update_task(token, task_id):
+def test_update_task(cookies, task_id):
     """Test task update"""
     print("\n✏️  Testing update task...")
     try:
-        with httpx.Client() as client:
+        with httpx.Client(cookies=cookies) as client:
             response = client.patch(
                 f"{BASE_URL}/api/tasks/{task_id}",
                 json={"is_completed": True, "title": "Updated Task"},
-                headers={"Authorization": f"Bearer {token}"},
                 timeout=15,
             )
         
@@ -165,14 +162,13 @@ def test_update_task(token, task_id):
         print(f"❌ Update task error: {e}")
         return False
 
-def test_delete_task(token, task_id):
+def test_delete_task(cookies, task_id):
     """Test task deletion"""
     print("\n🗑️  Testing delete task...")
     try:
-        with httpx.Client() as client:
+        with httpx.Client(cookies=cookies) as client:
             response = client.delete(
                 f"{BASE_URL}/api/tasks/{task_id}",
-                headers={"Authorization": f"Bearer {token}"},
                 timeout=15,
             )
         
@@ -187,16 +183,18 @@ def test_delete_task(token, task_id):
         print(f"❌ Delete task error: {e}")
         return None
 
-def test_auth_error_handling(token):
+def test_auth_error_handling(cookies):
     """Test authentication error handling"""
     print("\n🛡️  Testing error handling...")
     
-    # Test with invalid token
+    # Test with invalid token (modify cookie)
+    invalid_cookies = httpx.Cookies()
+    invalid_cookies.set("access_token", "invalid_token")
+    
     try:
-        with httpx.Client() as client:
+        with httpx.Client(cookies=invalid_cookies) as client:
             response = client.get(
                 f"{BASE_URL}/api/tasks/",
-                headers={"Authorization": "Bearer invalid_token"},
                 timeout=15,
             )
         
@@ -208,7 +206,7 @@ def test_auth_error_handling(token):
         print(f"❌ Error test failed: {e}")
         return False
     
-    # Test without auth header
+    # Test without auth cookie
     try:
         with httpx.Client() as client:
             response = client.get(
@@ -217,7 +215,7 @@ def test_auth_error_handling(token):
             )
         
         if response.status_code == 401:
-            print(f"✅ Missing auth header correctly rejected (401)")
+            print(f"✅ Missing auth cookie correctly rejected (401)")
         else:
             print(f"⚠️  Unexpected status code for missing auth: {response.status_code}")
     except Exception as e:
@@ -237,32 +235,32 @@ def main():
         sys.exit(1)
     
     # Test 2: Sign up
-    token = test_sign_up()
-    if not token:
-        print("\n❌ Cannot continue without token")
+    cookies = test_sign_up()
+    if not cookies:
+        print("\n❌ Cannot continue without cookies")
         sys.exit(1)
     
     # Test 3: Get session
-    if not test_get_session(token):
+    if not test_get_session(cookies):
         print("\n⚠️  Session test failed, continuing...")
     
     # Test 4: Error handling
-    if not test_auth_error_handling(token):
+    if not test_auth_error_handling(cookies):
         print("\n⚠️  Error handling test failed")
     
     # Test 5: Create task
-    task_id = test_create_task(token)
+    task_id = test_create_task(cookies)
     if not task_id:
         print("\n⚠️  Cannot test other task operations")
     else:
         # Test 6: Get tasks
-        test_get_tasks(token)
+        test_get_tasks(cookies)
         
         # Test 7: Update task
-        test_update_task(token, task_id)
+        test_update_task(cookies, task_id)
         
         # Test 8: Delete task
-        test_delete_task(token, task_id)
+        test_delete_task(cookies, task_id)
     
     print("\n" + "=" * 60)
     print("✅ All core tests completed!")

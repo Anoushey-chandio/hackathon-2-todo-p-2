@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useSession, signOut } from '@/lib/auth-client';
+import {  signOut } from '@/lib/auth-client';
+import { useSession } from '@/lib/session';
 
 export default function Navbar() {
   const { user, isLoading } = useSession();
@@ -10,7 +11,7 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     await signOut();
-    router.push('/login');
+    router.push('/signin');
   };
 
   return (
@@ -47,7 +48,7 @@ export default function Navbar() {
             ) : (
               <div className="flex items-center gap-4">
                 <Link 
-                  href="/login"
+                  href="/signin"
                   className="text-sm font-bold text-gray-600 hover:text-light-purple dark:text-gray-300 transition-colors"
                 >
                   Login

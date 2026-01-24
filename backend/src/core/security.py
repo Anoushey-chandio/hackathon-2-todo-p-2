@@ -1,40 +1,68 @@
-from datetime import datetime, timedelta, timezone
-from typing import Any, Union, Optional, Dict
+# src/core/security.py
+from datetime import datetime, timezone, timedelta
 from passlib.context import CryptContext
-from jose import jwt, JWTError
-from .config import settings
+from typing import Optional
+import uuid
 
+from .config import settings
+from src.models.auth import Session  # SQLModel session model
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
+
+# Password hashing context
 pwd_context = CryptContext(schemes=["argon2", "bcrypt"], deprecated="auto")
 
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+def get_password_hash(password: str) -> str:
+    """Hash a plain password for storing in the database"""
+    return pwd_context.hash(password)
+
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verify a plain password against the stored hash"""
     try:
         return pwd_context.verify(plain_password, hashed_password)
     except Exception:
         return False
 
-def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
-    else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, settings.BETTER_AUTH_SECRET, algorithm=ALGORITHM)
-    return encoded_jwt
+def create_session_token(user_id: str) -> str:
+    """Create a unique session token (UUID)"""
+    return str(uuid.uuid4())
 
-def decode_access_token(token: str) -> Optional[Dict[str, Any]]:
+
+async def validate_session_token(token: str, db: AsyncSession) -> bool:
     """
-    Decodes a JWT token using the configured secret key.
-    Returns the payload if valid, None otherwise.
+    Validate that the session token exists in the DB and is not expired.
+    `db` is an AsyncSession instance.
     """
-    try:
-        payload = jwt.decode(token, settings.BETTER_AUTH_SECRET, algorithms=[ALGORITHM])
-        return payload
-    except JWTError:
-        return None
+    query = select(Session).where(Session.token == token)
+    result = await db.execute(query)
+    db_session = result.scalars().first()
+
+    if db_session and db_session.expiresAt > datetime.now(timezone.utc):
+        return True
+
+    return False
+
+
+async def create_db_session(db: AsyncSession, user_id: str, token: str, expires_in_seconds: int) -> Session:
+    """
+    Create a session record in the DB.
+    Returns the session object.
+    """
+    now = datetime.now(timezone.utc)
+    expires_at = now + timedelta(seconds=expires_in_seconds)
+
+    session_obj = Session(
+        id=str(uuid.uuid4()),
+        userId=user_id,
+        token=token,
+        expiresAt=expires_at,
+        createdAt=now,
+        updatedAt=now,
+    )
+    db.add(session_obj)
+    await db.commit()
+    await db.refresh(session_obj)
+    return session_obj

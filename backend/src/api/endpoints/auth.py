@@ -1,22 +1,20 @@
 """
-Authentication endpoints - Email/Password auth with JWT tokens
-Compatible with better-auth frontend client
+Authentication endpoints - Session-based auth (no JWT)
+Compatible with BetterAuth frontend client
 """
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, status, Header
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 from sqlalchemy import select
 from pydantic import EmailStr, BaseModel
 from src.core.database import get_db
 from src.models.user import User
 from src.models.auth import Session
-from src.lib.auth_better import create_session_token, verify_token, ACCESS_TOKEN_EXPIRE_MINUTES
-from datetime import datetime, timezone, timedelta
 from passlib.context import CryptContext
-import logging
-import asyncio
+from datetime import datetime, timezone, timedelta
 import uuid
+import asyncio
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -25,50 +23,43 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-
+# -----------------------
+# Request / Response Models
+# -----------------------
 class SignUpRequest(BaseModel):
-    """Sign up request model"""
     email: EmailStr
     password: str
     name: str | None = None
 
-
 class SignInRequest(BaseModel):
-    """Sign in request model"""
     email: EmailStr
     password: str
 
-
 class SessionResponse(BaseModel):
-    """Session response model"""
-    session: dict
     user: dict
 
-
-def hash_password(password: str) -> str:
+# -----------------------
+# Password Helpers
+# -----------------------
+def hash_password_sync(password: str) -> str:
     """Hash a password (truncate to 72 bytes for bcrypt compatibility)"""
-    # bcrypt can only handle passwords up to 72 bytes
     password_truncated = password[:72]
     return pwd_context.hash(password_truncated)
 
-
 def verify_password_sync(plain_password: str, hashed_password: str) -> bool:
-    """Verify a password against its hash (truncate to 72 bytes for bcrypt compatibility)"""
-    # bcrypt can only handle passwords up to 72 bytes
+    """Verify a password against its hash"""
     password_truncated = plain_password[:72]
     return pwd_context.verify(password_truncated, hashed_password)
 
-
-async def hash_password_async(password: str) -> str:
-    """Async wrapper for password hashing"""
-    return await asyncio.to_thread(hash_password, password)
-
+async def hash_password(password: str) -> str:
+    return await asyncio.to_thread(hash_password_sync, password)
 
 async def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Async wrapper for password verification"""
     return await asyncio.to_thread(verify_password_sync, plain_password, hashed_password)
 
-
+# -----------------------
+# Session Helpers
+# -----------------------
 async def create_db_session(db: AsyncSession, user_id: str, token: str, expires_in_seconds: int) -> None:
     """Create a session record in the database"""
     now = datetime.now(timezone.utc)
@@ -85,10 +76,28 @@ async def create_db_session(db: AsyncSession, user_id: str, token: str, expires_
     db.add(session)
     await db.commit()
 
+def set_auth_cookie(response: Response, token: str, expires_in: int):
+    response.set_cookie(
+        key="access_token",
+        value=token,
+        httponly=True,
+        max_age=expires_in,
+        expires=expires_in,
+        secure=False,  # True in production
+        samesite="lax",
+        path="/"
+    )
+
+SESSION_EXPIRE_SECONDS = 60 * 60 * 24  # 1 day
+
+# -----------------------
+# Endpoints
+# -----------------------
 
 @router.post("/sign-up", response_model=SessionResponse)
 async def sign_up(
     request: SignUpRequest,
+    response: Response,
     db: Annotated[AsyncSession, Depends(get_db)]
 ):
     """Create a new user account and return session"""
@@ -96,15 +105,14 @@ async def sign_up(
     # Check if user already exists
     result = await db.execute(select(User).where(User.email == request.email))
     existing_user = result.scalars().first()
-    
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User with this email already exists"
         )
     
-    # Hash password (async to avoid blocking)
-    hashed_password = await hash_password_async(request.password)
+    # Hash password
+    hashed_password = await hash_password(request.password)
     
     # Create user
     user = User(
@@ -116,21 +124,22 @@ async def sign_up(
         createdAt=datetime.now(timezone.utc),
         updatedAt=datetime.now(timezone.utc),
     )
-    
     db.add(user)
     await db.commit()
     await db.refresh(user)
     
     logger.info(f"User created: {user.email} (id: {user.id})")
     
-    # Create session tokens
-    tokens = create_session_token(str(user.id), user.email)
+    # Create session token (random UUID)
+    session_token = str(uuid.uuid4())
     
     # Save session to DB
-    await create_db_session(db, str(user.id), tokens["access_token"], tokens["expires_in"])
+    await create_db_session(db, str(user.id), session_token, SESSION_EXPIRE_SECONDS)
     
+    # Set cookie
+    set_auth_cookie(response, session_token, SESSION_EXPIRE_SECONDS)
+
     return SessionResponse(
-        session=tokens,
         user={
             "id": str(user.id),
             "email": user.email,
@@ -142,10 +151,10 @@ async def sign_up(
         }
     )
 
-
 @router.post("/sign-in", response_model=SessionResponse)
 async def sign_in(
     request: SignInRequest,
+    response: Response,
     db: Annotated[AsyncSession, Depends(get_db)]
 ):
     """Authenticate user with email/password"""
@@ -158,24 +167,25 @@ async def sign_in(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
-            headers={"WWW-Authenticate": "Bearer"},
         )
     
     logger.info(f"User signed in: {user.email}")
     
-    # Create session tokens
-    tokens = create_session_token(str(user.id), user.email)
+    # Create session token (random UUID)
+    session_token = str(uuid.uuid4())
     
     # Save session to DB
-    await create_db_session(db, str(user.id), tokens["access_token"], tokens["expires_in"])
+    await create_db_session(db, str(user.id), session_token, SESSION_EXPIRE_SECONDS)
     
     # Update last login
     user.updatedAt = datetime.now(timezone.utc)
     await db.commit()
     await db.refresh(user)
     
+    # Set cookie
+    set_auth_cookie(response, session_token, SESSION_EXPIRE_SECONDS)
+
     return SessionResponse(
-        session=tokens,
         user={
             "id": str(user.id),
             "email": user.email,
@@ -187,68 +197,50 @@ async def sign_in(
         }
     )
 
-
 @router.post("/sign-out")
 async def sign_out(
-    authorization: Annotated[str | None, Header()] = None,
-    db: Annotated[AsyncSession, Depends(get_db)] = None,
+    request: Request,
+    response: Response,
+    db: Annotated[AsyncSession, Depends(get_db)],
 ):
-    """Sign out user (delete session from DB)"""
-    if authorization and authorization.startswith("Bearer "):
-        token = authorization.replace("Bearer ", "")
+    """Sign out user (delete session from DB and clear cookie)"""
+    token = request.cookies.get("access_token")
+    if token:
         result = await db.execute(select(Session).where(Session.token == token))
         session = result.scalars().first()
         if session:
             await db.delete(session)
             await db.commit()
     
+    response.delete_cookie(key="access_token", path="/", samesite="lax")
     return {"success": True}
-
 
 @router.get("/session", response_model=SessionResponse)
 async def get_session(
-    authorization: Annotated[str | None, Header()] = None,
-    db: Annotated[AsyncSession, Depends(get_db)] = None,
+    request: Request,
+    db: Annotated[AsyncSession, Depends(get_db)],
 ):
-    """Get current session/user info from token"""
+    """Get current session user info (SESSION-BASED ONLY)"""
     
-    if not authorization or not authorization.startswith("Bearer "):
+    token = request.cookies.get("access_token")
+    if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing or invalid authorization header",
-            headers={"WWW-Authenticate": "Bearer"},
+            detail="Not authenticated",
         )
     
-    token = authorization.replace("Bearer ", "")
-    
-    # Verify token format
-    payload = verify_token(token)
-    if not payload:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    user_id = payload.get("sub")
-    if not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token payload",
-        )
-        
     # Check session in DB
     result_session = await db.execute(select(Session).where(Session.token == token))
     session_db = result_session.scalars().first()
     
-    if not session_db:
+    if not session_db or session_db.expiresAt < datetime.now(timezone.utc):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Session expired or invalid",
         )
     
-    # Get user from database
-    result = await db.execute(select(User).where(User.id == user_id))
+    # Get user from DB
+    result = await db.execute(select(User).where(User.id == session_db.userId))
     user = result.scalars().first()
     
     if not user:
@@ -258,10 +250,6 @@ async def get_session(
         )
     
     return SessionResponse(
-        session={
-            "access_token": token,
-            "token_type": "Bearer",
-        },
         user={
             "id": str(user.id),
             "email": user.email,

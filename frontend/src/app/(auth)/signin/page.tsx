@@ -1,17 +1,27 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { signIn } from '@/lib/auth-client';
+import { sessionManager, useSession } from '@/lib/session';
 import Image from 'next/image';
 import Link from 'next/link';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const router = useRouter();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const router = useRouter();
+  const { user, isLoading: sessionLoading } = useSession();
+
+  // If user is already logged in, redirect to tasks page
+  useEffect(() => {
+    if (!sessionLoading && user) {
+      router.replace('/tasks');
+    }
+  }, [user, sessionLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,14 +30,22 @@ export default function LoginPage() {
 
     try {
       await signIn(email, password);
-      // Redirect to dashboard on success
-      router.push('/');
+
+      // Verify session updated in manager
+      if (!sessionManager.getUser()) {
+        throw new Error('Session verification failed. Please try again.');
+      }
+
+      // Redirect to tasks/dashboard
+      router.replace('/tasks');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign in failed');
     } finally {
       setLoading(false);
     }
   };
+
+  if (sessionLoading) return null; // show nothing while session is loading
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-6 bg-white dark:bg-black text-black dark:text-white font-sans">
@@ -68,7 +86,12 @@ export default function LoginPage() {
           {loading ? 'Signing in...' : 'Sign In'}
         </button>
       </form>
-      <p className="text-gray-500 dark:text-gray-400 mt-6">Don&apos;t have an account? <Link href="/signup" className="text-light-purple font-semibold hover:underline">Sign up</Link></p>
+      <p className="text-gray-500 dark:text-gray-400 mt-6">
+        Don&apos;t have an account?{' '}
+        <Link href="/signup" className="text-light-purple font-semibold hover:underline">
+          Sign up
+        </Link>
+      </p>
     </div>
   );
 }

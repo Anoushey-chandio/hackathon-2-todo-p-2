@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { taskApi } from '@/lib/api_tasks';
+import { taskApi, Task } from '@/lib/api_tasks';
 
 interface AddTaskFormProps {
   onTaskAdded: () => void;
@@ -16,12 +16,16 @@ export default function AddTaskForm({ onTaskAdded }: AddTaskFormProps) {
     if (!title.trim()) return;
 
     setLoading(true);
+
     try {
+      // Token is automatically included by fetchClient via sessionManager
+      // Check sessionManager state first
       await taskApi.create({ title });
       setTitle('');
-      onTaskAdded();
+      onTaskAdded(); // Refresh tasks after adding
     } catch (error) {
       console.error('Failed to add task:', error);
+      alert('Failed to add task. Please try again.');
     } finally {
       setLoading(false);
     }

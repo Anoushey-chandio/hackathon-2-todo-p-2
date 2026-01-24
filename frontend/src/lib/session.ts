@@ -1,5 +1,5 @@
-// Custom session management for Python backend
-// This replaces better-auth's session management
+import { useEffect, useState } from 'react';
+import { fetchClient } from './api';
 
 export interface User {
   id: string;
@@ -11,86 +11,88 @@ export interface User {
   updatedAt: string;
 }
 
-export interface Session {
-  id: string;
-  userId: string;
-  token: string;
-  expiresAt: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface SessionData {
   user: User;
-  session: Session;
 }
 
+type Listener = (session: SessionData | null) => void;
+
 class SessionManager {
-  private sessionData: SessionData | null = null;
-  private listeners: Set<(session: SessionData | null) => void> = new Set();
+  private session: SessionData | null = null;
+  private listeners = new Set<Listener>();
+  private loadingPromise: Promise<SessionData | null> | null = null;
 
+  // 🔐 single fetch guard
   async getSession(): Promise<SessionData | null> {
-    // Try to get from cache first
-    if (this.sessionData) {
-      return this.sessionData;
-    }
+    if (this.session) return this.session;
+    if (this.loadingPromise) return this.loadingPromise;
 
-    // Try to get from backend
-    try {
-      const response = await fetch('/api/auth/session', {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest',
-        },
+    this.loadingPromise = fetchClient('/api/auth/session', {
+      method: 'GET',
+    })
+      .then(async res => {
+        if (!res.ok) return null;
+        const data = await res.json();
+        this.setSession(data);
+        return data;
+      })
+      .finally(() => {
+        this.loadingPromise = null;
       });
 
-      if (response.ok) {
-        this.sessionData = await response.json();
-        this.notifyListeners(this.sessionData);
-        return this.sessionData;
-      } else if (response.status === 401) {
-        // Not logged in
-        this.sessionData = null;
-        this.notifyListeners(null);
-        return null;
-      }
-    } catch (error) {
-      console.error('Failed to fetch session:', error);
-    }
-
-    return null;
+    return this.loadingPromise;
   }
 
-  setSession(session: SessionData | null): void {
-    this.sessionData = session;
-    if (session?.session?.token) {
-      localStorage.setItem('auth_token', session.session.token);
-      document.cookie = `token=${session.session.token}; path=/; max-age=3600; SameSite=Lax`;
-    } else {
-      localStorage.removeItem('auth_token');
-      document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-    }
-    this.notifyListeners(session);
+  setSession(session: SessionData | null) {
+    this.session = session;
+    this.listeners.forEach(fn => fn(session));
   }
 
-  clearSession(): void {
-    this.sessionData = null;
-    localStorage.removeItem('auth_token');
-    document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-    this.notifyListeners(null);
+  clearSession() {
+    this.setSession(null);
   }
 
-  subscribe(listener: (session: SessionData | null) => void): () => void {
+  subscribe(listener: Listener) {
     this.listeners.add(listener);
-    return () => {
-      this.listeners.delete(listener);
-    };
+    return () => this.listeners.delete(listener);
   }
 
-  private notifyListeners(session: SessionData | null): void {
-    this.listeners.forEach(listener => listener(session));
+  getUser() {
+    return this.session?.user ?? null;
   }
 }
 
 export const sessionManager = new SessionManager();
+
+// --------------------
+// React Hook
+export function useSession() {
+  const [session, setSession] = useState<SessionData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+
+    sessionManager.getSession().then(s => {
+      if (mounted) {
+        setSession(s);
+        setLoading(false);
+      }
+    });
+
+    const unsubscribe = sessionManager.subscribe(s => {
+      if (mounted) setSession(s);
+    });
+
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
+  }, []);
+
+  return {
+    session,
+    user: session?.user ?? null,
+    isLoading: loading,
+  };
+}

@@ -1,7 +1,7 @@
 from typing import Optional
 from datetime import datetime
 from sqlmodel import Field, Relationship, SQLModel, Column, DateTime
-
+from.user import User
 class Session(SQLModel, table=True):
     __tablename__ = "session"
 

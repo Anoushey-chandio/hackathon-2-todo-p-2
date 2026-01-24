@@ -4,7 +4,10 @@ A modern, secure Todo application built with Next.js, FastAPI, and PostgreSQL (N
 
 ## Features
 
-- **Authentication**: Secure Signup & Login with JWT (HttpOnly cookies).
+### Authentication: 
+This project uses Better Auth (a third-party service) with cookie-based sessions.
+  The backend uses the secret key from Better Auth (`BETTER_AUTH_SECRET`) to verify user sessions securely.
+
 - **Tasks**: Create, Read, Update, Delete tasks.
 - **Privacy**: Strict data isolation per user.
 - **Responsive UI**: Built with Tailwind CSS.

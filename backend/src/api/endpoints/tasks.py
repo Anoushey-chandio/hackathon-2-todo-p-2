@@ -14,7 +14,7 @@ async def read_tasks(
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
     skip: int = 0,
-    limit: int = 100
+    limit: int = 200
 ):
     result = await db.execute(
         select(Task).where(Task.user_id == current_user.id).offset(skip).limit(limit)

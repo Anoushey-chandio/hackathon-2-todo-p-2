@@ -11,7 +11,7 @@ API_BASE = "http://127.0.0.1:8000/api"
 def test_auth_flow():
     """Test signup and login flow"""
     
-    with httpx.Client() as client:
+    with httpx.Client(base_url=API_BASE) as client:
         # Test data
         test_email = f"test.user.{int(datetime.now().timestamp())}@example.com"
         test_password = "Test123!"  # Shorter password (< 72 bytes)
@@ -24,7 +24,6 @@ def test_auth_flow():
         # 1. Test Sign Up
         print(f"\n[1] Testing Sign Up endpoint...")
         print(f"    Email: {test_email}")
-        print(f"    Name: {test_name}")
         
         signup_data = {
             "email": test_email,
@@ -34,27 +33,22 @@ def test_auth_flow():
         
         try:
             resp = client.post(
-                f"{API_BASE}/auth/sign-up",
-                json=signup_data,
-                headers={"Content-Type": "application/json"}
+                "/auth/sign-up",
+                json=signup_data
             )
             signup_response = resp.json()
             
             if resp.status_code == 200:
                 print(f"    ✅ Sign Up SUCCESS")
-                print(f"       Status: {resp.status_code}")
                 
-                # Extract token and user
-                if "session" in signup_response and "access_token" in signup_response["session"]:
-                    token = signup_response["session"]["access_token"]
+                # Check cookie
+                if "access_token" in client.cookies:
+                    print(f"       ✅ Cookie set: access_token found")
                     user = signup_response.get("user", {})
-                    
-                    print(f"       Token: {token[:30]}...")
-                    print(f"       User ID: {user.get('id', 'N/A')}")
                     print(f"       User Email: {user.get('email', 'N/A')}")
                 else:
-                    print(f"       ⚠️  Response missing session/token")
-                    print(f"       Response: {json.dumps(signup_response, indent=2)}")
+                    print(f"       ❌ Cookie NOT set!")
+                    return
             else:
                 print(f"    ❌ Sign Up FAILED")
                 print(f"       Status: {resp.status_code}")
@@ -66,7 +60,8 @@ def test_auth_flow():
         
         # 2. Test Sign In
         print(f"\n[2] Testing Sign In endpoint...")
-        print(f"    Email: {test_email}")
+        # Clear cookies to test sign in properly
+        client.cookies.clear()
         
         signin_data = {
             "email": test_email,
@@ -75,25 +70,21 @@ def test_auth_flow():
         
         try:
             resp = client.post(
-                f"{API_BASE}/auth/sign-in",
-                json=signin_data,
-                headers={"Content-Type": "application/json"}
+                "/auth/sign-in",
+                json=signin_data
             )
             signin_response = resp.json()
             
             if resp.status_code == 200:
                 print(f"    ✅ Sign In SUCCESS")
-                print(f"       Status: {resp.status_code}")
                 
-                if "session" in signin_response and "access_token" in signin_response["session"]:
-                    token = signin_response["session"]["access_token"]
+                if "access_token" in client.cookies:
+                    print(f"       ✅ Cookie set: access_token found")
                     user = signin_response.get("user", {})
-                    
-                    print(f"       Token: {token[:30]}...")
-                    print(f"       User ID: {user.get('id', 'N/A')}")
                     print(f"       User Email: {user.get('email', 'N/A')}")
                 else:
-                    print(f"       ⚠️  Response missing session/token")
+                    print(f"       ❌ Cookie NOT set!")
+                    return
             else:
                 print(f"    ❌ Sign In FAILED")
                 print(f"       Status: {resp.status_code}")
@@ -103,28 +94,19 @@ def test_auth_flow():
             print(f"    ❌ Sign In ERROR: {e}")
             return
         
-        # 3. Test Session Retrieval with Token
-        print(f"\n[3] Testing Session endpoint with Bearer token...")
+        # 3. Test Session Retrieval
+        print(f"\n[3] Testing Session endpoint (Cookie Auth)...")
         
         try:
-            resp = client.get(
-                f"{API_BASE}/auth/session",
-                headers={
-                    "Authorization": f"Bearer {token}",
-                    "Content-Type": "application/json"
-                }
-            )
+            resp = client.get("/auth/session")
             session_response = resp.json()
             
             if resp.status_code == 200:
                 print(f"    ✅ Session Retrieval SUCCESS")
-                print(f"       Status: {resp.status_code}")
                 
                 if "user" in session_response:
                     user = session_response["user"]
-                    print(f"       User ID: {user.get('id', 'N/A')}")
                     print(f"       User Email: {user.get('email', 'N/A')}")
-                    print(f"       User Name: {user.get('name', 'N/A')}")
             else:
                 print(f"    ❌ Session Retrieval FAILED")
                 print(f"       Status: {resp.status_code}")
@@ -136,19 +118,27 @@ def test_auth_flow():
         print(f"\n[4] Testing Sign Out endpoint...")
         
         try:
-            resp = client.post(
-                f"{API_BASE}/auth/sign-out",
-                headers={"Authorization": f"Bearer {token}"}
-            )
+            resp = client.post("/auth/sign-out")
             if resp.status_code == 200:
                 print(f"    ✅ Sign Out SUCCESS")
-                print(f"       Status: {resp.status_code}")
+                
+                # Check cookie is cleared (or expired)
+                # Note: httpx doesn't always automatically expire cookies in the jar immediately upon receipt of set-cookie with expiry
+                # But we can check if subsequent requests fail
             else:
                 print(f"    ❌ Sign Out FAILED")
                 print(f"       Status: {resp.status_code}")
         except Exception as e:
             print(f"    ❌ Sign Out ERROR: {e}")
         
+        # 5. Verify Session Gone
+        print(f"\n[5] Verifying Session Gone...")
+        resp = client.get("/auth/session")
+        if resp.status_code == 401:
+             print(f"    ✅ Session correctly invalid (401)")
+        else:
+             print(f"    ❌ Session still valid! Status: {resp.status_code}")
+
         print(f"\n{'='*60}")
         print(f"Authentication Flow Test Completed!")
         print(f"{'='*60}\n")

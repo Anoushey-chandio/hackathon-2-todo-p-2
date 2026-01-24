@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import { useSession } from "@/lib/auth-client";
+import { useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { useSession } from '@/lib/session';
 
 export default function AuthGuard({
   children,
@@ -11,46 +11,40 @@ export default function AuthGuard({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, token, isLoading, error } = useSession();
-
-  useEffect(() => {
-    if (isLoading) return;
-
-    // Define route groups
-    const authRoutes = ['/login', '/signup'];
-    // Protected routes: Tasks only (Home is public)
-    const isProtectedRoute = pathname.startsWith('/tasks');
-    const isAuthRoute = authRoutes.includes(pathname);
-
-    if (user && token && !error) {
-      if (isAuthRoute) {
-        // If logged in and trying to access login/signup, redirect to dashboard
-        router.push('/');
-      }
-    } else {
-      // Treat error (e.g. connection failed) as not logged in
-      if (isProtectedRoute) {
-        // If not logged in and trying to access protected route, redirect to login
-        router.push('/login');
-      }
-    }
-  }, [pathname, router, user, token, isLoading, error]);
+  const { user, isLoading } = useSession();
 
   const isProtectedRoute = pathname.startsWith('/tasks');
+  const isAuthRoute = pathname === '/signin' || pathname === '/signup';
 
-  // Show spinner ONLY if we are loading AND on a protected route.
-  // This allows Navbar and Public pages to render immediately.
+  useEffect(() => {
+    // Wait until session check finishes
+    if (isLoading) return;
+
+    // 🚫 Not logged in + protected route → go to signin
+    if (!user && isProtectedRoute) {
+      router.replace('/signin');
+      return;
+    }
+
+    // ✅ Logged in + auth pages → go to tasks
+    if (user && isAuthRoute) {
+      router.replace('/tasks');
+      return;
+    }
+  }, [user, isLoading, pathname, router]);
+
+  // ⏳ Loading spinner ONLY for protected routes
   if (isLoading && isProtectedRoute) {
-     return (
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
-        </div>
-     );
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+      </div>
+    );
   }
 
-  // If we are NOT loading, but unauthorized for a protected route, we render nothing (useEffect redirects)
+  // 🚫 Prevent protected content flash
   if (!isLoading && !user && isProtectedRoute) {
-      return null; 
+    return null;
   }
 
   return <>{children}</>;
