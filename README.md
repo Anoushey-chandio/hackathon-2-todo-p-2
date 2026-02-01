@@ -58,6 +58,8 @@ This project uses Better Auth (a third-party service) with cookie-based sessions
 
 ## Implementation Details
 
-- **Auth**: JWT tokens are issued on login and stored in the database `session` table for revocation support.
-- **API**: RESTful endpoints protected by `get_current_user` dependency.
-- **Frontend**: Uses `fetch` proxy to backend to handle CORS and cookies securely.
+Auth: Uses Better Auth cookie-based sessions to verify user login securely.
+
+API (FastAPI): RESTful endpoints protected by get_current_user dependency.
+
+Frontend: Uses fetch proxy to backend to handle CORS and cookies securely
