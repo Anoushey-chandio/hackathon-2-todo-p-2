@@ -1,25 +1,12 @@
 'use client'; // MUST be top
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useSession } from '@/lib/session';
 
 export default function HomePage() {
   const { user, isLoading } = useSession();
-  const router = useRouter();
 
-  // ✅ Prevent multiple redirects with a flag
-  const [hasRedirected, setHasRedirected] = useState(false);
-
-  useEffect(() => {
-    if (!isLoading && user && !hasRedirected) {
-      setHasRedirected(true); // mark as redirected
-      router.replace('/tasks'); // redirect logged-in users to tasks page
-    }
-  }, [isLoading, user, router, hasRedirected]);
-
-  // Show nothing until session finishes loading
+  // Show nothing until session finishes loading (to prevent flickering)
   if (isLoading) return null;
 
   return (
@@ -39,6 +26,7 @@ export default function HomePage() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
           {!user ? (
             <>
+              {/* ✅ Not Logged In: Show Sign Up & Sign In */}
               <Link
                 href="/signup"
                 className="px-8 py-4 bg-light-purple text-white text-lg font-bold rounded-2xl hover:bg-opacity-90 hover:scale-105 transition-all shadow-lg shadow-purple-200 dark:shadow-purple-900/20"
@@ -53,7 +41,20 @@ export default function HomePage() {
               </Link>
             </>
           ) : (
-            <p className="text-gray-500 dark:text-gray-400 text-lg">Redirecting to Dashboard...</p>
+            <>
+              {/* ✅ Logged In: Show Go to Tasks button instead of redirecting */}
+              <div className="flex flex-col items-center gap-4">
+                <p className="text-gray-600 dark:text-gray-400 text-lg">
+                  Welcome back, <span className="font-bold text-light-purple">{user.name || 'User'}</span>!
+                </p>
+                <Link
+                  href="/tasks"
+                  className="px-10 py-4 bg-light-purple text-white text-lg font-bold rounded-2xl hover:bg-opacity-90 hover:scale-105 transition-all shadow-lg shadow-purple-200 dark:shadow-purple-900/20"
+                >
+                  Go to My Tasks
+                </Link>
+              </div>
+            </>
           )}
         </div>
       </div>

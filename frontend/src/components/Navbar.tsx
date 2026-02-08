@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import {  signOut } from '@/lib/auth-client';
+import { signOut } from '@/lib/auth-client';
 import { useSession } from '@/lib/session';
 
 export default function Navbar() {
@@ -10,8 +10,14 @@ export default function Navbar() {
   const router = useRouter();
 
   const handleLogout = async () => {
-    await signOut();
-    router.push('/signin');
+    try {
+      await signOut();
+      // ✅ router.push ki jagah window.location use karein taake 
+      // page hard refresh ho aur session memory se saaf ho jaye.
+      window.location.href = '/signin';
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
   };
 
   return (
@@ -28,38 +34,43 @@ export default function Navbar() {
 
           {/* User Profile / Auth Links */}
           <div className="flex items-center gap-4">
-            {user ? (
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 px-3 py-1.5 rounded-full border border-gray-100 dark:border-gray-700">
-                    <div className="w-6 h-6 rounded-full bg-light-cyan/20 flex items-center justify-center text-xs text-light-cyan font-bold border border-light-cyan">
-                        {user.name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || 'U'}
+            {/* isLoading check takay loading ke waqt buttons jump na karein */}
+            {!isLoading && (
+              <>
+                {user ? (
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 px-3 py-1.5 rounded-full border border-gray-100 dark:border-gray-700">
+                        <div className="w-6 h-6 rounded-full bg-light-cyan/20 flex items-center justify-center text-xs text-light-cyan font-bold border border-light-cyan">
+                            {user.name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || 'U'}
+                        </div>
+                        <span className="text-sm font-medium hidden sm:block">
+                            {user.name || user.email}
+                        </span>
                     </div>
-                    <span className="text-sm font-medium hidden sm:block">
-                        {user.name || user.email}
-                    </span>
-                </div>
-                <button
-                  onClick={handleLogout}
-                  className="text-sm font-medium text-gray-500 hover:text-red-500 transition-colors"
-                >
-                  Logout
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-4">
-                <Link 
-                  href="/signin"
-                  className="text-sm font-bold text-gray-600 hover:text-light-purple dark:text-gray-300 transition-colors"
-                >
-                  Login
-                </Link>
-                <Link
-                  href="/signup"
-                  className="px-4 py-2 bg-light-purple text-white text-sm font-bold rounded-lg hover:opacity-90 transition-opacity shadow-lg shadow-purple-100 dark:shadow-none"
-                >
-                  Sign up
-                </Link>
-              </div>
+                    <button
+                      onClick={handleLogout}
+                      className="text-sm font-medium text-gray-500 hover:text-red-500 transition-colors"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-4">
+                    <Link 
+                      href="/signin"
+                      className="text-sm font-bold text-gray-600 hover:text-light-purple dark:text-gray-300 transition-colors"
+                    >
+                      Login
+                    </Link>
+                    <Link
+                      href="/signup"
+                      className="px-4 py-2 bg-light-purple text-white text-sm font-bold rounded-lg hover:opacity-90 transition-opacity shadow-lg shadow-purple-100 dark:shadow-none"
+                    >
+                      Sign up
+                    </Link>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

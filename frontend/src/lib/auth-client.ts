@@ -13,7 +13,7 @@ export interface ErrorResponse {
 // --------------------
 // Sign Up
 export async function signUp(email: string, password: string, name?: string) {
-  const res = await fetchClient('/api/auth/sign-up', {
+  const res = await fetchClient('/api/auth/signup', {
     method: 'POST',
     body: JSON.stringify({ email, password, name }),
   });
@@ -31,7 +31,7 @@ export async function signUp(email: string, password: string, name?: string) {
 // --------------------
 // Sign In
 export async function signIn(email: string, password: string) {
-  const res = await fetchClient('/api/auth/sign-in', {
+  const res = await fetchClient('/api/auth/signin', {
     method: 'POST',
     body: JSON.stringify({ email, password }),
   });
@@ -47,12 +47,24 @@ export async function signIn(email: string, password: string) {
 }
 
 // --------------------
-// Sign Out
+// Sign Out (Corrected)
 export async function signOut() {
-  await fetchClient('/api/auth/sign-out', {
-    method: 'POST',
-  });
-  sessionManager.clearSession();
+  try {
+    await fetchClient('/api/auth/signout', {
+      method: 'POST',
+    });
+  } catch (error) {
+    console.error("Logout error:", error);
+  } finally {
+    // 1. Frontend session clear karo
+    sessionManager.clearSession();
+    
+    // 2. User ko Sign-in page par bhej do aur page refresh karo
+    // Is se browser ki memory mein purana data delete ho jayega
+    if (typeof window !== 'undefined') {
+      window.location.href = '/signin'; 
+    }
+  }
 }
 
 // --------------------

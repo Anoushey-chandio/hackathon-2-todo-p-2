@@ -1,4 +1,4 @@
-# Python
+# --- Python Specific ---
 __pycache__/
 *.py[cod]
 *$py.class
@@ -10,7 +10,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-#/lib/   # Commented out so frontend/src/lib is not ignored
+# lib/ is NOT ignored to allow frontend/src/lib
 lib64/
 parts/
 sdist/
@@ -21,31 +21,47 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
-#.env
+
+# --- Environments & Secrets (CRITICAL) ---
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 .venv
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
-.env.local
-# Node.js
-node_modules/
-npm-debug.log
-yarn-error.log
-pnpm-debug.log
 
-# Next.js
+# --- Node.js & Frontend ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 .next/
 out/
-#.env
 
-# IDEs
+# --- IDEs & Editors ---
 .idea/
 .vscode/
 *.swp
 *.swo
+*.sublime-project
+*.sublime-workspace
 
-# OS
+# --- Operating System ---
 .DS_Store
+.DS_Store?
+._*
 Thumbs.db
+desktop.ini
+
+# --- Logs ---
+logs
+*.log
+.env
+backend/.env
+frontend/.env

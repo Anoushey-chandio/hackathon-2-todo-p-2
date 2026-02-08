@@ -14,28 +14,25 @@ export default function AuthGuard({
   const { user, isLoading } = useSession();
 
   const isProtectedRoute = pathname.startsWith('/tasks');
-  const isAuthRoute = pathname === '/signin' || pathname === '/signup';
 
   useEffect(() => {
-    // Wait for session to load
+    // 1. Loading ke waqt kuch nahi karna
     if (isLoading) return;
 
-    // 1️⃣ User not logged in + trying protected route → redirect to signin
+    // 2. Agar user login NAHI hai aur Protected Route (/tasks) par jane ki koshish kare
+    // Toh usay signin par bhejo
     if (!user && isProtectedRoute) {
       router.replace('/signin');
       return;
     }
 
-    // 2️⃣ User logged in + on signin/signup → redirect to tasks
-    if (user && isAuthRoute) {
-      router.replace('/tasks');
-      return;
-    }
+    // NOTE: Humne yahan se wo block hata diya hai jo logged-in user ko 
+    // signin/signup se utha kar tasks par phenk deta tha.
+    // Ab user login hone ke baad bhi baqi pages dekh sakega.
 
-    // 3️⃣ Logged-in user on other pages → do nothing
   }, [user, isLoading, pathname, router]);
 
-  // ⏳ Show loader for protected routes while checking session
+  // ⏳ Loader sirf tab dikhayen jab user kisi protected page (/tasks) par ho aur session load ho raha ho
   if (isLoading && isProtectedRoute) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -44,7 +41,7 @@ export default function AuthGuard({
     );
   }
 
-  // 🚫 Prevent flash of protected content for logged-out users
+  // 🚫 Agar loading khatam ho jaye aur user login na ho, toh protected content hide rakhen
   if (!isLoading && !user && isProtectedRoute) {
     return null;
   }
