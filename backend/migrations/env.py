@@ -22,7 +22,7 @@ from sqlmodel import SQLModel
 from src.models.user import User 
 from src.models.task import Task
 from src.models.auth import Session, Account, Verification
-from src.models.jwks import Jwks
+from src.models.chat import Conversation, Message
 
 target_metadata = SQLModel.metadata
 

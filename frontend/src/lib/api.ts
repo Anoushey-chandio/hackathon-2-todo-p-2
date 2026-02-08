@@ -3,7 +3,7 @@
 import { sessionManager } from '@/lib/session';
 
 // FastAPI backend base URL
-const API_URL = 'https://anoushey-todo-app.hf.space';
+const API_URL = 'http://localhost:8000';
 
 export async function fetchClient(
   path: string,

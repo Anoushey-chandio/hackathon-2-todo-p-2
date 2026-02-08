@@ -17,23 +17,25 @@ export default function AuthGuard({
   const isAuthRoute = pathname === '/signin' || pathname === '/signup';
 
   useEffect(() => {
-    // Wait until session check finishes
+    // Wait for session to load
     if (isLoading) return;
 
-    // 🚫 Not logged in + protected route → go to signin
+    // 1️⃣ User not logged in + trying protected route → redirect to signin
     if (!user && isProtectedRoute) {
       router.replace('/signin');
       return;
     }
 
-    // ✅ Logged in + auth pages → go to tasks
+    // 2️⃣ User logged in + on signin/signup → redirect to tasks
     if (user && isAuthRoute) {
       router.replace('/tasks');
       return;
     }
+
+    // 3️⃣ Logged-in user on other pages → do nothing
   }, [user, isLoading, pathname, router]);
 
-  // ⏳ Loading spinner ONLY for protected routes
+  // ⏳ Show loader for protected routes while checking session
   if (isLoading && isProtectedRoute) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -42,7 +44,7 @@ export default function AuthGuard({
     );
   }
 
-  // 🚫 Prevent protected content flash
+  // 🚫 Prevent flash of protected content for logged-out users
   if (!isLoading && !user && isProtectedRoute) {
     return null;
   }

@@ -1,0 +1,71 @@
+openapi: 3.0.0
+info:
+  title: Todo Chatbot API
+  version: 1.0.0
+paths:
+  /api/chat/message:
+    post:
+      summary: Send a message to the chatbot
+      operationId: sendMessage
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Add a task to buy milk"
+                conversation_id:
+                  type: string
+                  format: uuid
+                  nullable: true
+      responses:
+        '200':
+          description: Chatbot response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  response:
+                    type: string
+                    example: "I've added 'buy milk' to your task list."
+                  conversation_id:
+                    type: string
+                    format: uuid
+                  action_taken:
+                    type: string
+                    enum: [none, task_added, task_updated, task_deleted]
+                    nullable: true
+
+  /api/chat/history:
+    get:
+      summary: Get chat history for a conversation
+      parameters:
+        - name: conversation_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    role:
+                      type: string
+                      enum: [user, assistant]
+                    content:
+                      type: string
+                    created_at:
+                      type: string
+                      format: date-time

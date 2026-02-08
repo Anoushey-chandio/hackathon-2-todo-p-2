@@ -21,14 +21,14 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
-
+#.env
 .venv
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
-
+.env.local
 # Node.js
 node_modules/
 npm-debug.log
@@ -38,6 +38,7 @@ pnpm-debug.log
 # Next.js
 .next/
 out/
+#.env
 
 # IDEs
 .idea/
@@ -48,9 +49,3 @@ out/
 # OS
 .DS_Store
 Thumbs.db
-.env
-.env.*
-!.env.example
-.env
-backend/.env
-frontend/.env

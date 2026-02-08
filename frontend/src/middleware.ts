@@ -23,12 +23,14 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Redirect logged-in users away from auth pages
-  if ((pathname === '/signin' || pathname === '/signup') && token) {
-    const homeUrl = req.nextUrl.clone();
-    homeUrl.pathname = '/';
-    return NextResponse.redirect(homeUrl);
-  }
+  // Remove redirect from /signin or /signup if user has token
+  // Let AuthGuard or client-side hook handle redirect to /tasks
+  // This prevents loop redirect
+  // if ((pathname === '/signin' || pathname === '/signup') && token) {
+  //   const homeUrl = req.nextUrl.clone();
+  //   homeUrl.pathname = '/';
+  //   return NextResponse.redirect(homeUrl);
+  // }
 
   return NextResponse.next();
 }

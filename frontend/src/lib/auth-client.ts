@@ -15,9 +15,7 @@ export interface ErrorResponse {
 export async function signUp(email: string, password: string, name?: string) {
   const res = await fetchClient('/api/auth/sign-up', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password, name }),
-    credentials: 'include', // ✅ cookies ke liye
   });
 
   if (!res.ok) {
@@ -35,9 +33,7 @@ export async function signUp(email: string, password: string, name?: string) {
 export async function signIn(email: string, password: string) {
   const res = await fetchClient('/api/auth/sign-in', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
-    credentials: 'include', // ✅ cookies ke liye
   });
 
   if (!res.ok) {
@@ -55,7 +51,6 @@ export async function signIn(email: string, password: string) {
 export async function signOut() {
   await fetchClient('/api/auth/sign-out', {
     method: 'POST',
-    credentials: 'include', // ✅ cookies ke liye
   });
   sessionManager.clearSession();
 }
@@ -65,7 +60,6 @@ export async function signOut() {
 export async function getSession(): Promise<AuthResponse | null> {
   const res = await fetchClient('/api/auth/session', {
     method: 'GET',
-    credentials: 'include', // ✅ cookies ke liye
   });
 
   if (!res.ok) return null;

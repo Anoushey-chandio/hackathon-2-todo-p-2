@@ -1,7 +1,8 @@
 from typing import Annotated, List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import select
-from src.core.database import get_db, AsyncSession
+from sqlmodel.ext.asyncio.session import AsyncSession
+from src.core.database import get_db
 from src.models.user import User
 from src.models.task import Task
 from src.schemas.task import TaskCreate, TaskUpdate, TaskOut
@@ -78,5 +79,3 @@ async def delete_task(
     
     await db.delete(task)
     await db.commit()
-
-# Removed separate /{id}/complete endpoint in favor of generic PATCH
