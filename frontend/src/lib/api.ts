@@ -3,7 +3,7 @@
 import { sessionManager } from '@/lib/session';
 
 // FastAPI backend base URL
-const API_URL = 'http://localhost:8000';
+const API_URL = 'https://anoushey-full-stack-todo-chatbot.hf.space';
 
 export async function fetchClient(
   path: string,
